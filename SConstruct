@@ -14,7 +14,7 @@ def CheckVectorExtension(context):
 
 ######################################################################################
 
-env = Environment(CXXFLAGS=['-std=c++11', '-O3'])
+env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-Wall', '-Wno-missing-braces'])
 
 ######################################################################################
 
@@ -63,7 +63,9 @@ test = env.Program(target = 'perm16_test', source = ["perm16_test.cpp", "perm16.
 
 ######################################################################################
 
-env.AlwaysBuild(Alias('check', [test], test[0].abspath))
+env.AlwaysBuild(Alias('check'))
+Alias('check', [test], test[0].abspath)
+
 env.Clean("distclean", [ ".sconsign.dblite", ".sconf_temp", "config.log", ])
 
 Default(shlib)

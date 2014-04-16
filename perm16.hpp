@@ -24,8 +24,8 @@ struct Perm16
     epi8 v8;
   };
 
-  uint8_t operator[](unsigned long i) const { return p[i]; }
-  uint8_t &operator[](unsigned long i) { return p[i]; }
+  uint8_t operator[](uint64_t i) const { return p[i]; }
+  uint8_t &operator[](uint64_t i) { return p[i]; }
 
   bool operator==(const Perm16 &vp) const {
     #ifdef GCC_VECT_CMP
@@ -40,15 +40,15 @@ struct Perm16
     // Check for speed:
     // return (diff == 16) ? false : p[diff] < b.p[diff];
     #ifdef GCC_VECT_CMP
-    int diffs = _mm_movemask_epi8(v8 < b.v8);
+    uint64_t diffs = _mm_movemask_epi8(v8 < b.v8);
     #else
-    int diffs = _mm_movemask_epi8(_mm_cmplt_epi8(v, b.v));
+    uint64_t diffs = _mm_movemask_epi8(_mm_cmplt_epi8(v, b.v));
     #endif
     return (diffs >> diff) & 0x1;;
   }
 
   int less_partial(const Perm16 &b, int k) const {
-    int diff = _mm_cmpestri (v, k, b.v, k, FIRST_DIFF);
+    uint64_t diff = _mm_cmpestri (v, k, b.v, k, FIRST_DIFF);
     return (diff == 16) ? 0 : char(p[diff]) - char(b.p[diff]);
   }
 
