@@ -20,11 +20,10 @@
   #include <cilk/reducer_list.h>
 #endif
 
-
-
 struct Perm16;
 
 #include "perm16.hpp"
+
 
 template< class perm  = Perm16 >
 class PermutationGroup {
@@ -84,15 +83,15 @@ private:
     }
   };
 
-public:
-
 #ifdef USE_CILK
   using list_generator = cilk::reducer_list_append< vect >;
 #else
   using list_generator = std::list< vect >;
 #endif
 
-//  void walk_tree(vect v, list_generator &res, int remaining_depth) const;
+  void walk_tree(vect v, list_generator &res, int remaining_depth) const;
+
+public:
 
   ChildrenIterator children(const vect &v) const { return {*this, v}; }
 
@@ -110,8 +109,6 @@ std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g
 
 //template<class T>
 //using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator>;
-
-#define USE_BOOST_FLAT_SET
 
 #ifdef USE_BOOST_FLAT_SET
   #include <boost/container/flat_set.hpp>
@@ -149,20 +146,17 @@ bool PermutationGroup<perm>::is_canonical(const vect &v) const {
 }
 
 template<class perm>
-void walk_tree(const PermutationGroup<perm> &grp,
-               const typename PermutationGroup<perm>::vect v,
-               typename PermutationGroup<perm>::list_generator &res,
-               uint64_t remaining_depth)
+void PermutationGroup<perm>::walk_tree(
+   vect v, list_generator &res, int remaining_depth) const
 {
   if (remaining_depth == 0) res.push_back(v);
-  else for (auto ch = grp.children(v); ch.is_not_end(); ++ch) {
-      typename PermutationGroup<perm>::vect child = *ch;
-      if (grp.is_canonical(child))
+  else for (auto ch = children(v); ch.is_not_end(); ++ch) {
+      vect child = *ch;
+      if (is_canonical(child))
 #ifdef USE_CILK
-	cilk_spawn walk_tree(grp, child, res, remaining_depth-1);
-#else
-        walk_tree(grp, child, res, remaining_depth-1);
+	cilk_spawn
 #endif
+	  this->walk_tree(child, res, remaining_depth-1);
     }
 }
 
@@ -173,7 +167,7 @@ PermutationGroup<perm>::elements_of_depth(uint64_t depth) const {
   vect zero_vect;
   list_generator list_res;
   zero_vect.v = __m128i {0, 0};
-  walk_tree<perm>(*this, zero_vect, list_res, depth);
+  walk_tree(zero_vect, list_res, depth);
 #ifdef USE_CILK
   return list_res.get_value();
 #else
@@ -183,7 +177,3 @@ PermutationGroup<perm>::elements_of_depth(uint64_t depth) const {
 
 
 #endif
-/*
-walk_tree(const PermutationGroup<Perm16>&, PermutationGroup<Perm16>::vect&, PermutationGroup<Perm16>::list_generator&, uint64_t&)
-walk_tree(const PermutationGroup<perm>&, PermutationGroup<perm>::vect, PermutationGroup<perm>::list_generator&, int)
-*/

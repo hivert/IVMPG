@@ -35,8 +35,7 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     import cpuAVX
 
     conf = Configure(env, custom_tests = cpuAVX.custom_tests,
-                     # config_h = "config.h"
-    )
+                     config_h = "config.h" )
 
     if not conf.CheckCXX():
         Fail('!! Your compiler and/or environment is not correctly configured.')
@@ -53,9 +52,12 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     else:
         env.Append(CXXFLAGS = ['-mavx', '-mtune=native']) # TODO check sse4.2 is ok
     if conf.CheckGCCVectorExtension():
-        env.Append(CPPDEFINES = ['GCC_VECT_CMP'])
+        # env.Append(CPPDEFINES = ['GCC_VECT_CMP'])
         # for use if config.h
-        # conf.Define('GCC_VECT_CMP', 1, 'Set to 1 if GCC has vector comparison')
+        conf.Define('GCC_VECT_CMP', 1, 'Set if GCC has vector comparison')
+
+    if conf.CheckCXXHeader('boost/container/flat_set.hpp'):
+        env.Append(CPPDEFINES = ['USE_BOOST_FLAT_SET'])
 
     tbb_dir = ARGUMENTS.get('tbb_dir', os.environ.get('TBB_ROOT', None))
     if tbb_dir is not None:
