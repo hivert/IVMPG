@@ -46,10 +46,14 @@ BOOST_AUTO_TEST_CASE( elements_of_depth_test )
   BOOST_CHECK_EQUAL( g100.elements_of_depth(10).size(),  280 ); // Checked with Sage
   BOOST_CHECK_EQUAL( g100.elements_of_depth(20).size(), 4576 ); // Checked with Sage
 
-  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth( 0).size(),     1 );
-  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth( 5).size(),    25 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth(10).size(),   545 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth(20).size(), 57605 ); // Checked with Sage
+  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth( 0).size(),       1 );
+  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth( 5).size(),      25 ); // Checked with Sage
+  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth(10).size(),     545 ); // Checked with Sage
+  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth(20).size(),   57605 ); // Checked with Sage
+#ifdef USE_CILK
+  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth(25).size(),  375810 ); // Checked with Sage
+  BOOST_CHECK_EQUAL( g_Borie.elements_of_depth(30).size(), 1983238 ); // Checked with Sage
+#endif
 }
 
 BOOST_AUTO_TEST_SUITE_END()

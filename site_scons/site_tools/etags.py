@@ -17,8 +17,8 @@ def find_etags(env):
     b=env.WhereIs('etags')
     if b == None:
         print 'Searching for etags: not found. Tags will not be built'
-    else:
-        print 'Searching for etags: ', b
+    # else:
+    #     print 'Searching for etags: ', b
     return b
 
 def exists(env):

@@ -6,10 +6,25 @@
 #include <list>
 #include <string>
 
+#ifdef USE_TBB
+  #include "tbb/scalable_allocator.h"
+  template<class T>
+  using allocator = tbb::scalable_allocator<T>;
+#else
+  template<class T>
+  using allocator = std::allocator<T>;
+#endif
+
+#ifdef USE_CILK
+  #include <cilk/cilk_api.h>
+  #include <cilk/reducer_list.h>
+#endif
+
+
+
 struct Perm16;
 
 #include "perm16.hpp"
-
 
 template< class perm  = Perm16 >
 class PermutationGroup {
@@ -35,7 +50,9 @@ public:
 
   bool check_sgs() {
     for (uint64_t level = 0; level<sgs.size(); level++)
-      for (auto &v : sgs[level]) {
+      //  for (auto &v : sgs[level]) {
+      for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
+	Perm16 v = *ip;
 	if (not v.is_permutation(N)) return false;
 	for (uint64_t i=0; i<level; i++)
 	  if (not (v[i] == i)) return false;
@@ -67,9 +84,15 @@ private:
     }
   };
 
-  void walk_tree(vect v, list &res, int remaining_depth) const;
-
 public:
+
+#ifdef USE_CILK
+  using list_generator = cilk::reducer_list_append< vect >;
+#else
+  using list_generator = std::list< vect >;
+#endif
+
+//  void walk_tree(vect v, list_generator &res, int remaining_depth) const;
 
   ChildrenIterator children(const vect &v) const { return {*this, v}; }
 
@@ -84,14 +107,6 @@ std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g
 }
 
 
-#ifdef USE_TBB
-  #include "tbb/scalable_allocator.h"
-  template<class T>
-  using allocator = tbb::scalable_allocator< T >;
-#else
-  template<class T>
-  using allocator = std::allocator< T >;
-#endif
 
 //template<class T>
 //using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator>;
@@ -116,8 +131,12 @@ bool PermutationGroup<perm>::is_canonical(const vect &v) const {
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
     auto &transversal = sgs[i];
-    for (vect list_test : to_analyse) {
-      for (vect x : transversal) {
+    //    for (vect list_test : to_analyse) {
+    for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
+      vect list_test = *itl;
+      // for (vect x : transversal) {
+      for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
+	vect x = *itv;
         child = list_test.permuted(x);
         char comp = v.less_partial(child, i+1);
         if (comp == 0) new_to_analyse.insert(child);
@@ -129,27 +148,21 @@ bool PermutationGroup<perm>::is_canonical(const vect &v) const {
   return true;
 }
 
-
-#ifdef USE_CILK
-  #include <cilk/cilk_api.h>
-  #include <cilk/reducer_list.h>
-  template<class T> using list_generator = cilk::reducer_list_append< T >;
-#else
-  template<class T> using list_generator = std::list< T >;
-#endif
-
 template<class perm>
-void PermutationGroup<perm>::walk_tree(
-   vect v, list_generator<vect> &res, int remaining_depth) const
+void walk_tree(const PermutationGroup<perm> &grp,
+               const typename PermutationGroup<perm>::vect v,
+               typename PermutationGroup<perm>::list_generator &res,
+               uint64_t remaining_depth)
 {
   if (remaining_depth == 0) res.push_back(v);
-  else for (auto ch = children(v); ch.is_not_end(); ++ch) {
-      vect child = *ch;
-      if (is_canonical(child))
+  else for (auto ch = grp.children(v); ch.is_not_end(); ++ch) {
+      typename PermutationGroup<perm>::vect child = *ch;
+      if (grp.is_canonical(child))
 #ifdef USE_CILK
-	cilk_spawn
+	cilk_spawn walk_tree(grp, child, res, remaining_depth-1);
+#else
+        walk_tree(grp, child, res, remaining_depth-1);
 #endif
-	  walk_tree(child, res, remaining_depth-1);
     }
 }
 
@@ -158,9 +171,9 @@ template<class perm>
 std::list<typename PermutationGroup<perm>::vect>
 PermutationGroup<perm>::elements_of_depth(uint64_t depth) const {
   vect zero_vect;
-  list_generator<vect> list_res;
+  list_generator list_res;
   zero_vect.v = __m128i {0, 0};
-  walk_tree(zero_vect, list_res, depth);
+  walk_tree<perm>(*this, zero_vect, list_res, depth);
 #ifdef USE_CILK
   return list_res.get_value();
 #else
@@ -170,3 +183,7 @@ PermutationGroup<perm>::elements_of_depth(uint64_t depth) const {
 
 
 #endif
+/*
+walk_tree(const PermutationGroup<Perm16>&, PermutationGroup<Perm16>::vect&, PermutationGroup<Perm16>::list_generator&, uint64_t&)
+walk_tree(const PermutationGroup<perm>&, PermutationGroup<perm>::vect, PermutationGroup<perm>::list_generator&, int)
+*/
