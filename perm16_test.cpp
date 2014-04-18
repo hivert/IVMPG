@@ -11,20 +11,27 @@ struct Fixture {
 	      PPa({ 1, 2, 3, 4, 0, 5, 6, 7, 8, 9,10,11,12,13,14,15}),
 	      PPb({ 1, 2, 3, 6, 0, 5, 6, 7, 8, 9,10,11,12,13,14,15}),
 	      czero(zero), cP01 (P01),
-	      Plist({zero, P01, P10, P11, P1, PPa, PPb})
+	      RandPerm({3,1,0,14,15,13,5,10,2,11,6,12,7,4,8,9}),
+	      Plist({zero, P01, P10, P11, P1, PPa, PPb, RandPerm})
   { BOOST_TEST_MESSAGE( "setup fixture" ); }
 
   ~Fixture()         { BOOST_TEST_MESSAGE( "teardown fixture" ); }
 
-  Perm16 zero, P01, P10, P11, P1, PPa, PPb;
-  const Perm16 czero, cP01;
-  std::vector<Perm16> Plist;
+  Vect16 zero, P01, P10, P11, P1, PPa, PPb;
+  const Vect16 czero, cP01, RandPerm;
+  const std::vector<Vect16> Plist;
+
 };
+
+auto less     = [](Vect16 a, Vect16 b) {return a < b;};
+auto not_less = [](Vect16 a, Vect16 b) {return not(a < b);};
+
+auto is_perm     = [](Vect16 a, int i=16) {return a.is_permutation(i);};
+auto is_not_perm = [](Vect16 a, int i=16) {return not a.is_permutation(i);};
 
 //____________________________________________________________________________//
 
-BOOST_FIXTURE_TEST_SUITE( Perm16_test, Fixture )
-
+BOOST_FIXTURE_TEST_SUITE( Vect16_test, Fixture )
 
 BOOST_AUTO_TEST_CASE( equal_test )
 {
@@ -70,10 +77,9 @@ BOOST_AUTO_TEST_CASE( operator_bracket_test )
   BOOST_CHECK_EQUAL( PPa[3], 4 );
 }
 
+
 BOOST_AUTO_TEST_CASE( operator_less_test )
 {
-  auto less     = [](Perm16 a, Perm16 b) {return a < b;};
-  auto not_less = [](Perm16 a, Perm16 b) {return not(a < b);};
   for (unsigned i = 0; i<Plist.size(); i++)
     for (unsigned j = 0; j<Plist.size(); j++)
       if (i < j) BOOST_CHECK_PREDICATE(less, (Plist[i])(Plist[j]) );
@@ -155,13 +161,13 @@ BOOST_AUTO_TEST_CASE( search_last_non_zero_test )
   BOOST_CHECK_EQUAL( PPa.search_index<LAST_NON_ZERO>(3), 2);
 }
 
-BOOST_AUTO_TEST_CASE( mult_test )
+BOOST_AUTO_TEST_CASE( permuted_test )
 {
-  BOOST_CHECK_EQUAL( zero * zero, zero );
-  BOOST_CHECK_EQUAL( P01 * P01, P01 );
-  BOOST_CHECK_EQUAL( P10 * P10, Perm16({0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}) );
-  BOOST_CHECK_EQUAL( P10 * P01, Perm16({1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1}) );
-  BOOST_CHECK_EQUAL( P01 * P10, P10 );
+  BOOST_CHECK_EQUAL( zero.permuted(zero), zero );
+  BOOST_CHECK_EQUAL( P01.permuted(P01), P01 );
+  BOOST_CHECK_EQUAL( P10.permuted(P10), Vect16({0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}) );
+  BOOST_CHECK_EQUAL( P10.permuted(P01), Vect16({1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1}) );
+  BOOST_CHECK_EQUAL( P01.permuted(P10), P10 );
 // TODO: check mult
 }
 
@@ -181,14 +187,80 @@ BOOST_AUTO_TEST_CASE( operator_insert_test )
 
 BOOST_AUTO_TEST_CASE( is_permutation_test )
 {
-  BOOST_CHECK(not zero.is_permutation());
-  BOOST_CHECK(PPa.is_permutation());
-  BOOST_CHECK(not PPb.is_permutation());
-  BOOST_CHECK(Perm16({3,1,0,14,15,13,5,10,2,11,6,12,7,4,8,9}).is_permutation());
-  BOOST_CHECK(not Perm16({3,1,0,14,15,13,3,10,2,11,6,12,7,4,8,9}).is_permutation());
+  BOOST_CHECK_PREDICATE(is_not_perm, (zero));
+  BOOST_CHECK_PREDICATE(is_perm, (PPa));
+  BOOST_CHECK_PREDICATE(is_not_perm, (PPb));
+  BOOST_CHECK_PREDICATE(is_perm, (RandPerm));
+  BOOST_CHECK_PREDICATE(is_not_perm, (Vect16({3,1,0,14,15,13,3,10,2,11,6,12,7,4,8,9})));
+  BOOST_CHECK_PREDICATE(is_not_perm, (RandPerm)(4));
+  BOOST_CHECK_PREDICATE(is_perm, (PPa)(5));
+  BOOST_CHECK_PREDICATE(is_not_perm, (PPa)(4));
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 
 
+//____________________________________________________________________________//
+
+
+struct PermFixture {
+  PermFixture() : id(Perm16::one()),
+		  RandPerm({3,1,0,14,15,13,5,10,2,11,6,12,7,4,8,9}),
+		  Plist({id, RandPerm})
+  {
+    for (uint64_t i=0; i<15; i++)
+      Plist.insert(Plist.begin()+1+i, Perm16::elementary_transposition(i));
+    BOOST_TEST_MESSAGE( "setup fixture" );
+  }
+
+  ~PermFixture()         { BOOST_TEST_MESSAGE( "teardown fixture" ); }
+
+  Perm16 id, s1, s2, s3;
+  const Perm16 RandPerm;
+  std::vector<Perm16> Plist;
+};
+
+
+//____________________________________________________________________________//
+
+BOOST_FIXTURE_TEST_SUITE( Perm16_test, PermFixture )
+
+BOOST_AUTO_TEST_CASE( constructor_is_permutation_test )
+{
+  for (auto x : Plist) {
+    BOOST_CHECK_PREDICATE(is_perm, (x));
+  }
+  BOOST_CHECK_PREDICATE(is_perm, (Perm16()));
+  BOOST_CHECK_PREDICATE(is_perm, (Perm16({1,0})));
+  BOOST_CHECK_PREDICATE(is_perm, (Perm16({1,2,0})));
+  BOOST_CHECK_PREDICATE(is_not_perm, (Perm16({1,2})));
+}
+
+BOOST_AUTO_TEST_CASE( operator_mult_coxeter_test )
+{
+  for (uint64_t i=0; i<15; i++) {
+    Perm16 si = Perm16::elementary_transposition(i);
+    BOOST_CHECK_NE(si, id);
+    BOOST_CHECK_EQUAL(si * si, id);
+    if (i+1 < 15) {
+      Perm16 si1 = Perm16::elementary_transposition(i+1);
+      BOOST_CHECK_EQUAL(si * si1 * si, si1 * si * si1);
+    }
+    for (uint64_t j=i+2; j<15; j++) {
+    Perm16 sj = Perm16::elementary_transposition(j);
+    BOOST_CHECK_EQUAL(sj * si, si * sj);
+    }
+  }
+}
+
+BOOST_AUTO_TEST_CASE( operator_mult_test )
+{
+  for (auto x : Plist) {
+    BOOST_CHECK_EQUAL(id * x, x);
+    BOOST_CHECK_EQUAL(x * id, x);
+  }
+  BOOST_CHECK_EQUAL(RandPerm * RandPerm, Perm16({14,1,3,8,9,4,13,6,0,12,5,7,10,15,2,11}));
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
