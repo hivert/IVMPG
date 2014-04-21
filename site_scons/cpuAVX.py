@@ -1,4 +1,5 @@
 import SCons.SConf
+from utils import *
 
 cpuid_header = """
     #include <cpuid.h>
@@ -15,10 +16,6 @@ footer = """
       return EXIT_SUCCESS;
     }
 """
-
-def Fail(message):
-    print(message)
-    Exit(1)
 
 cpuid_checked = False
 
@@ -67,4 +64,4 @@ def CheckGCCVectorExtension(context):
     context.Result(result)
     return result
 
-custom_tests = globals()
+Tests = { key : val for key, val in globals().items() if key.startswith('Check') }

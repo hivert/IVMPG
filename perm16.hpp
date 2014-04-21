@@ -5,9 +5,10 @@
 #include <x86intrin.h>
 #include <array>
 
+#include "config.h"
+
 using vect16 = std::array<uint8_t, 16> ;
 using epi8 = uint8_t __attribute__ ((vector_size (16)));
-
 
 // Comparison mode for _mm_cpmestri
 const char FIRST_DIFF = (_SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_EACH | _SIDD_NEGATIVE_POLARITY);

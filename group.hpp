@@ -6,6 +6,8 @@
 #include <list>
 #include <string>
 
+#include "config.h"
+
 #ifdef USE_TBB
   #include "tbb/scalable_allocator.h"
   template<class T>
@@ -16,14 +18,16 @@
 #endif
 
 #ifdef USE_CILK
+  #include <cilk/cilk.h>
   #include <cilk/cilk_api.h>
   #include <cilk/reducer_list.h>
+#else
+  #define cilk_spawn
 #endif
 
 struct Perm16;
 
 #include "perm16.hpp"
-
 
 template< class perm  = Perm16 >
 class PermutationGroup {
@@ -39,7 +43,7 @@ public:
 
 public:
 
-  using list = std::list<vect>;
+  using list = std::list<vect, allocator<vect> >;
 
   PermutationGroup(std::string name, uint64_t N, StrongGeneratingSet sgs) :
     name(name), N(N), sgs(sgs) { assert(check_sgs()); };
@@ -84,9 +88,9 @@ private:
   };
 
 #ifdef USE_CILK
-  using list_generator = cilk::reducer_list_append< vect >;
+  using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
 #else
-  using list_generator = std::list< vect >;
+  using list_generator = std::list< vect, allocator<vect> >;
 #endif
 
   void walk_tree(vect v, list_generator &res, int remaining_depth) const;
@@ -153,16 +157,13 @@ void PermutationGroup<perm>::walk_tree(
   else for (auto ch = children(v); ch.is_not_end(); ++ch) {
       vect child = *ch;
       if (is_canonical(child))
-#ifdef USE_CILK
-	cilk_spawn
-#endif
-	  this->walk_tree(child, res, remaining_depth-1);
+	cilk_spawn this->walk_tree(child, res, remaining_depth-1);
     }
 }
 
 
 template<class perm>
-std::list<typename PermutationGroup<perm>::vect>
+typename PermutationGroup<perm>::list
 PermutationGroup<perm>::elements_of_depth(uint64_t depth) const {
   vect zero_vect;
   list_generator list_res;
