@@ -10,7 +10,7 @@ def SearchCilkCompiler(env):
             if os.path.exists(cilk_exec):
                 env['CXX'] = cilk_exec
                 libpath = [os.path.join(cilk_dir, ld) for ld in ['lib', 'lib64']]
-                env.Append(CPPDEFINES = ['USE_CILK'],
+                env.Prepend(CPPDEFINES = ['USE_CILK'],
                            CPPPATH = [os.path.join(cilk_dir, 'include')],
                            CXXFLAGS = ['-fcilkplus'],
                            LIBS = ['cilkrts'],

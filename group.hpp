@@ -51,7 +51,7 @@ public:
   bool is_canonical(const vect &v) const;
   list elements_of_depth(uint64_t depth) const;
 
-  bool check_sgs() {
+  bool check_sgs() const {
     for (uint64_t level = 0; level<sgs.size(); level++)
       //  for (auto &v : sgs[level]) {
       for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
