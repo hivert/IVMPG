@@ -1,3 +1,4 @@
+import os; os.sys.path.insert(0,os.path.abspath('.'))
 import perm16mod
 
 G6 = PermutationGroup([[(3,5),(4,6)], [(1,2),(3,4),(5,6)], [(1,4,6),(2,3,5)]])
@@ -15,3 +16,8 @@ Gcpp._check_sgs()
 ll = Gcpp.element_of_depth(15)
 assert(len(ll) == 6686)
 assert(len(list(ll)) == 6686)
+
+"""
+sage: len(ll) == 6686
+True
+"""
