@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <x86intrin.h>
 #include <array>
+#include <cassert>
 
 #include "config.h"
 
@@ -117,12 +118,14 @@ struct Perm16 : public Vect16 {
   Perm16(std::initializer_list<uint8_t> il) {
     uint64_t i=0;
     for (auto x : il) { v8[i++] = x; }
+    assert (i <= 16);
     for (/**/; i<16; i++) v8[i] = i;
   }
 
   Perm16 operator*(const Perm16&p) const { return permuted(p); }
   static Perm16 one() { return {}; }
   static Perm16 elementary_transposition(uint64_t i) {
+    assert (i < 16);
     Perm16 res {}; res[i]=i+1; res[i+1]=i; return res; }
 
 private:
