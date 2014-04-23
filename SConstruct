@@ -13,14 +13,14 @@ Type: 'scons [options] program' to build the production program,
 
 ######################################################################################
 
-env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-Wall', '-Wno-missing-braces'])
+env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-Wall', '-Wno-missing-braces', '-g'])
 
 ######################################################################################
 
 if not env.GetOption('clean') and not env.GetOption('help'):
 
     if cilk.SearchCilkCompiler(env) is None:
-        Fail('Unable to find a cilk compiler ! Not using cilk !')
+        print('Unable to find a cilk compiler ! Not using cilk !')
 
     conf = Configure(env, config_h = "config.h" )
     conf.AddTests(cpuAVX.Tests)
@@ -30,7 +30,7 @@ if not env.GetOption('clean') and not env.GetOption('help'):
         Fail('!! Your compiler and/or environment is not correctly configured.')
 
     if not conf.CheckCilkPlusCompiler():
-        Fail('Your cilk compiler is not working !')
+        print('Your cilk compiler is not working !')
 
     for lib in Split('cstdint array iostream x86intrin.h'):
         if not conf.CheckCXXHeader(lib):
@@ -90,12 +90,6 @@ perm16_lib = env.SharedLibrary(target = 'perm16',
 group16_lib  = env.SharedLibrary(target = 'group16',
                                  source = Split('group16.cpp perm16.cpp group16_examples.cpp'))
 
-perm16_test = test_env.Program(target = 'perm16_test', source = 'perm16_test.cpp')
-group_test  = test_env.Program(
-    target = 'group16_test', source = Split('group16_test.cpp group16_examples.cpp'))
-group_time  = test_env.Program(
-    target = 'timing', source = Split('timing.cpp group16_examples.cpp'))
-
 ######################################################################################
 
 sage_env = env.Clone()
@@ -118,13 +112,30 @@ sage_env.Append(CPPPATH = [SAGE_PYTHON, SAGE_INC,
 perm16cython  = sage_env.Cython(target = 'perm16mod.cpp',
                                 source = 'perm16mod.pyx')
 Depends(perm16cython, Split('perm16mod.pxd group16.pxd'))
-perm16mod_lib = sage_env.SharedLibrary(
+perm16mod = sage_env.SharedLibrary(
     target = 'perm16mod', source = [perm16cython], SHLIBPREFIX='')
-
 
 ######################################################################################
 
+perm16_test = test_env.Program(target = 'perm16_test', source = 'perm16_test.cpp')
+group_test  = test_env.Program(
+    target = 'group16_test', source = Split('group16_test.cpp'))
+group_time  = test_env.Program(
+    target = 'timing', source = Split('timing.cpp'))
+
+######################################################################################
 test_env.AlwaysBuild(Alias('check'))
+
+def testsage(env,target,source):
+    import subprocess
+    try:
+        subprocess.call(
+            [os.path.join(sage.env.SAGE_ROOT, 'sage'), '-t', source[0].abspath])
+    except Exception,e:
+        print "Unable to call Sage: Exception %s"%(str(e))
+
+
+test_env.Alias('check', ['testmod.py', perm16mod], testsage)
 test_env.Alias('check', [perm16_test], perm16_test[0].abspath)
 test_env.Alias('check', [group_test], group_test[0].abspath)
 
@@ -137,6 +148,6 @@ env.Clean("distclean", [ Split(".sconsign.dblite .sconf_temp config.h config.log
                          Glob(os.path.join("site_scons", "site_tools", "*.pyc")),
                      ])
 
-env.Default(perm16_lib, group16_lib, perm16mod_lib)
+env.Default(perm16_lib, group16_lib, perm16mod)
 
 print "BUILD_TARGETS is", [str(node) for node in BUILD_TARGETS]
