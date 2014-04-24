@@ -8,10 +8,7 @@
 #include <iostream>
 
 PermutationGroup<> S3 = GroupExamples<>::S3;
-
-// transitive subgroup of S6 number 100 according to Sage
 PermutationGroup<> g100  = GroupExamples<>::g100;
-
 PermutationGroup<> g_Borie  = GroupExamples<>::g_Borie;
 
 //____________________________________________________________________________//
