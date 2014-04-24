@@ -14,8 +14,7 @@ Type: 'scons [options] program' to build the production program,
 ######################################################################################
 
 
-env = Environment(#variables=vars, TBB_ROOT = os.environ['TBB_ROOT'],
-                  CXXFLAGS=['-std=c++11', '-O3', '-Wall', '-Wno-missing-braces', '-g'])
+env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-Wall', '-Wno-missing-braces', '-g'])
 
 vars = Variables()
 
@@ -106,7 +105,8 @@ SAGE_INCLUDE_DIR = [SAGE_INC, os.path.join(SAGE_INC, 'csage'),
 SAGE_LIB = os.path.join(sage.env.SAGE_LOCAL, 'lib')
 
 perm16mod  = env.Cython('perm16mod.pyx',
-                        CYTHONFLAGS = ['--cplus', "-I"+sage.env.SAGE_SRC])
+                        CYTHONLANG = 'c++',
+                        CYTHONFLAGS = ["-I"+sage.env.SAGE_SRC])
 Depends(perm16mod, Split('perm16mod.pxd group16.pxd'))
 
 sage_env = env.Clone()
