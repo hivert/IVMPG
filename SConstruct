@@ -21,7 +21,7 @@ vars = Variables()
 
 env.Append(TBB_ROOT = os.environ.get('TBB_ROOT', 'yes'))
 vars.Add(PackageVariable('tbb', 'thread building block', '${TBB_ROOT}'))
-env.Append(CILK_ROOT = os.environ.get('CILK_ROOT', 'no'))
+env.Append(CILK_ROOT = os.environ.get('CILK_ROOT', 'yes'))
 vars.Add(PackageVariable('cilk', 'cilk compiler installation', '${CILK_ROOT}'))
 
 vars.Update(env)
@@ -89,54 +89,46 @@ if not env.GetOption('clean') and not env.GetOption('help'):
                                         'boost/test/unit_test.hpp', 'c++'):
         Fail("Did not find 'boost unit test', unable to perform check !")
     test_env = test_conf.Finish()
-    test_env.Append(LIBPATH = ['.'], LIBS = ['libgroup16'], RPATH = ['.'])
-
-######################################################################################
-
-perm16_lib = env.SharedLibrary(target = 'perm16',
-                               source = Split('perm16.cpp'))
-group16_lib  = env.SharedLibrary(target = 'group16',
-                                 source = Split('group16.cpp perm16.cpp'))
 
 ######################################################################################
 
 env.Tool("cython")
 
 import sage.env
-SAGE_INC = os.path.join(sage.env.SAGE_LOCAL, 'include')
+
+# from SAGE_ROOT/src/setup.py:
+
+SAGE_INC = os.path.join(sage.env.SAGE_LOCAL,'include')
+SAGE_INCLUDE_DIR = [SAGE_INC, os.path.join(SAGE_INC, 'csage'),
+                    sage.env.SAGE_SRC,
+                    os.path.join(sage.env.SAGE_SRC, 'sage', 'ext'),
+                    os.path.join(SAGE_INC, 'python2.7')]
 SAGE_LIB = os.path.join(sage.env.SAGE_LOCAL, 'lib')
-SAGE_PYTHON  = os.path.join(SAGE_INC, 'python2.7')
-SAGE_C   = os.path.join(sage.env.SAGE_SRC, 'c_lib', 'include')
-SAGE_DEV = os.path.join(sage.env.SAGE_ROOT, 'src')
 
-
-perm16cython  = env.Cython(target = 'perm16mod.cpp',
-                           source = 'perm16mod.pyx',
-                           CYTHONFLAGS = ["--cplus",  "-I"+SAGE_DEV]
-)
+perm16mod  = env.Cython('perm16mod.pyx',
+                        CYTHONFLAGS = ['--cplus', "-I"+sage.env.SAGE_SRC])
+Depends(perm16mod, Split('perm16mod.pxd group16.pxd'))
 
 sage_env = env.Clone()
-sage_env.Append(CPPPATH = [SAGE_PYTHON, SAGE_INC, SAGE_C, SAGE_DEV],
-                LIBPATH = ['.', SAGE_LIB],
-                LIBS = ['libgroup16', 'csage'],
-                RPATH   = ['.', SAGE_LIB]
+sage_env.Append(CPPPATH = SAGE_INCLUDE_DIR,
+                LIBPATH = [SAGE_LIB],
+                LIBS    = ['csage'],
+                RPATH   = [SAGE_LIB]
 )
-Depends(perm16cython, Split('perm16mod.pxd group16.pxd'))
-perm16mod = sage_env.SharedLibrary(
-    target = 'perm16mod', source = [perm16cython], SHLIBPREFIX='')
+perm16mod = sage_env.SharedLibrary(source = perm16mod, SHLIBPREFIX='')
 
 ######################################################################################
 
-perm16_test = test_env.Program(target = 'perm16_test', source = 'perm16_test.cpp')
-group_test  = test_env.Program(
-    target = 'group16_test', source = Split('group16_test.cpp'))
-group_time  = test_env.Program(
-    target = 'timing', source = Split('timing.cpp'))
+perm16_o = env.Object('perm16.cpp')
+perm16_test = test_env.Program(['perm16_test.cpp', perm16_o])
+group_test  = test_env.Program(['group16_test.cpp', perm16_o])
+group_time  = test_env.Program('timing.cpp')
 
 ######################################################################################
+
 test_env.AlwaysBuild(Alias('check'))
 
-def testsage(env,target,source):
+def sage_test(env,target,source):
     import subprocess
     try:
         subprocess.call(
@@ -145,19 +137,21 @@ def testsage(env,target,source):
         print "Unable to call Sage: Exception %s"%(str(e))
 
 
-test_env.Alias('check', ['testmod.py', perm16mod], testsage)
+test_env.Alias('check', ['testmod.py', perm16mod], sage_test)
 test_env.Alias('check', [perm16_test], perm16_test[0].abspath)
 test_env.Alias('check', [group_test], group_test[0].abspath)
+
+######################################################################################
 
 if not env.GetOption('clean') and not env.GetOption('help'):
     env.Tool("etags")
     Alias('tags', env.etags(source=Glob('*.[ch]pp'), target='etags'))
+
+######################################################################################
 
 env.Clean("distclean", [ Split(".sconsign.dblite .sconf_temp config.h config.log TAGS"),
                          Glob(os.path.join("site_scons","*.pyc")),
                          Glob(os.path.join("site_scons", "site_tools", "*.pyc")),
                      ])
 
-env.Default(perm16_lib, group16_lib, perm16mod)
-
-print "BUILD_TARGETS is", [str(node) for node in BUILD_TARGETS]
+env.Default(perm16mod)

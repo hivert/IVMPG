@@ -60,7 +60,8 @@ def generate(env):
 
 def exists(env):
     try:
-#        import Cython
-        return True
+        import Cython
     except ImportError:
         return False
+    else:
+        return True
