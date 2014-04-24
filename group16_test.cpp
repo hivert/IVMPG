@@ -4,8 +4,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "group16.hpp"
-#include "group16_examples.hpp"
+#include "group_examples.hpp"
 #include <iostream>
+
+PermutationGroup<> S3 = GroupExamples<>::S3;
+
+// transitive subgroup of S6 number 100 according to Sage
+PermutationGroup<> g100  = GroupExamples<>::g100;
+
+PermutationGroup<> g_Borie  = GroupExamples<>::g_Borie;
 
 //____________________________________________________________________________//
 

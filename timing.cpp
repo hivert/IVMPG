@@ -3,10 +3,12 @@
 #include <cassert>
 
 #include "group16.hpp"
-#include "group16_examples.hpp"
+#include "group_examples.hpp"
 
 using namespace std;
 using namespace std::chrono;
+
+PermutationGroup<> g_Borie  = GroupExamples<>::g_Borie;
 
 long time_it(PermutationGroup16 gr, int level) {
   cout << gr.name << " ( " << level << " ) : ";

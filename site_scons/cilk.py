@@ -1,24 +1,6 @@
 import SCons.SConf
 from utils import *
 
-def SearchCilkCompiler(env):
-    print('Searching for a Cilk compiler... ')
-    cilk_dir = ARGUMENTS.get('cilk_dir', os.environ.get('CILK_ROOT', None))
-    if cilk_dir is not None:
-        for compiler in ['g++', 'clang++']:
-            cilk_exec = os.path.join(cilk_dir, 'bin', compiler)
-            if os.path.exists(cilk_exec):
-                env['CXX'] = cilk_exec
-                libpath = [os.path.join(cilk_dir, ld) for ld in ['lib', 'lib64']]
-                env.Prepend(CPPDEFINES = ['USE_CILK'],
-                           CPPPATH = [os.path.join(cilk_dir, 'include')],
-                           CXXFLAGS = ['-fcilkplus'],
-                           LIBS = ['cilkrts'],
-                           LIBPATH = libpath,
-                           RPATH   = libpath)
-                return cilk_exec
-    return None
-
 
 def CheckCilkPlusCompiler(context):
     test = """
@@ -38,8 +20,26 @@ def CheckCilkPlusCompiler(context):
     }
     """
     context.Message('Checking Cilk++ compiler ... ')
+    env = context.sconf.env
+    if isinstance(env['cilk'], str):
+        for compiler in ['g++', 'clang++']:
+            cilk_exec = os.path.join(env['cilk'], 'bin', compiler)
+            if os.path.exists(cilk_exec):
+                break
+        else:
+            context.Result('not found')
+            return None
+        env['CXX'] = cilk_exec
+        libpath = [os.path.join(env['cilk'], ld) for ld in ['lib', 'lib64']]
+        env.Prepend(CPPPATH = [os.path.join(env['cilk'], 'include')],
+                    LIBPATH = libpath,
+                    RPATH   = libpath)
+    env.Prepend(CXXFLAGS = ['-fcilkplus'], LIBS = ['cilkrts'])
     result = context.TryRun(test, '.cpp')
     context.Result(result[0])
+    if not result[0]: # cleanup environment
+        env['CXXFLAGS'] = env['CXXFLAGS'][1:]
+        env['LIBS'] = env['LIBS'][1:]
     return result[0]
 
 Tests = { key : val for key, val in globals().items() if key.startswith('Check') }

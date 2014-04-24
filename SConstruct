@@ -13,24 +13,32 @@ Type: 'scons [options] program' to build the production program,
 
 ######################################################################################
 
-env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-Wall', '-Wno-missing-braces', '-g'])
+
+env = Environment(#variables=vars, TBB_ROOT = os.environ['TBB_ROOT'],
+                  CXXFLAGS=['-std=c++11', '-O3', '-Wall', '-Wno-missing-braces', '-g'])
+
+vars = Variables()
+
+env.Append(TBB_ROOT = os.environ.get('TBB_ROOT', 'yes'))
+vars.Add(PackageVariable('tbb', 'thread building block', '${TBB_ROOT}'))
+env.Append(CILK_ROOT = os.environ.get('CILK_ROOT', 'no'))
+vars.Add(PackageVariable('cilk', 'cilk compiler installation', '${CILK_ROOT}'))
+
+vars.Update(env)
+Help(vars.GenerateHelpText(env))
 
 ######################################################################################
 
 if not env.GetOption('clean') and not env.GetOption('help'):
 
-    if cilk.SearchCilkCompiler(env) is None:
-        print('Unable to find a cilk compiler ! Not using cilk !')
-
     conf = Configure(env, config_h = "config.h" )
     conf.AddTests(cpuAVX.Tests)
     conf.AddTests(cilk.Tests)
 
-    if not conf.CheckCXX():
+    if env['cilk'] and conf.CheckCilkPlusCompiler():
+        conf.Define('USE_CILK', 1, 'Set to 1 if using Cilk compiler')
+    elif not conf.CheckCXX():
         Fail('!! Your compiler and/or environment is not correctly configured.')
-
-    if not conf.CheckCilkPlusCompiler():
-        print('Your cilk compiler is not working !')
 
     for lib in Split('cstdint array iostream x86intrin.h'):
         if not conf.CheckCXXHeader(lib):
@@ -55,20 +63,20 @@ if not env.GetOption('clean') and not env.GetOption('help'):
         print("Unable to find 'boost::container::flat_set'!")
         print("Falling back to default 'std::set'.")
 
-    tbb_dir = ARGUMENTS.get('tbb_dir', os.environ.get('TBB_ROOT', None))
-    if tbb_dir is not None:
-        env.Append(CPPPATH = [os.path.join(tbb_dir, 'include')],
-                   LIBPATH = [os.path.join(tbb_dir, 'lib')],
-                   RPATH   = [os.path.join(tbb_dir, 'lib')])
+    if isinstance(env['tbb'], str):
+        env.Append(CPPPATH = [os.path.join(env['tbb'], 'include')],
+                   LIBPATH = [os.path.join(env['tbb'], 'lib')],
+                   RPATH   = [os.path.join(env['tbb'], 'lib')])
 
-    if (conf.CheckLibWithHeader('tbb', 'tbb/scalable_allocator.h', 'c++') and
-        conf.CheckLibWithHeader('tbbmalloc', 'tbb/scalable_allocator.h', 'c++')):
-        conf.Define('USE_TBB', 1,
-                    "Set to 1 if using 'tbb::scalable_allocator' insteaf of 'std::allocator'")
-    else:
-        print("Unable to find TBB ! "
-              "Please add 'tbb_dir=<tbb_path> to the command line")
-        print("Falling back to default allocator")
+    if env['tbb']:
+        if ( conf.CheckLibWithHeader('tbb', 'tbb/scalable_allocator.h', 'c++') and
+             conf.CheckLibWithHeader('tbbmalloc', 'tbb/scalable_allocator.h', 'c++')):
+           conf.Define('USE_TBB', 1,
+                       "Set to 1 if using 'tbb::scalable_allocator' instead of 'std::allocator'")
+        else:
+            print("Unable to find TBB ! "
+                  "Please add 'tbb=<tbb_path> to the command line")
+            print("Falling back to default allocator")
     env = conf.Finish()
 
 ######################################################################################
@@ -88,12 +96,11 @@ if not env.GetOption('clean') and not env.GetOption('help'):
 perm16_lib = env.SharedLibrary(target = 'perm16',
                                source = Split('perm16.cpp'))
 group16_lib  = env.SharedLibrary(target = 'group16',
-                                 source = Split('group16.cpp perm16.cpp group16_examples.cpp'))
+                                 source = Split('group16.cpp perm16.cpp'))
 
 ######################################################################################
 
-sage_env = env.Clone()
-sage_env.Tool("cython")
+env.Tool("cython")
 
 import sage.env
 SAGE_INC = os.path.join(sage.env.SAGE_LOCAL, 'include')
@@ -102,15 +109,18 @@ SAGE_PYTHON  = os.path.join(SAGE_INC, 'python2.7')
 SAGE_C   = os.path.join(sage.env.SAGE_SRC, 'c_lib', 'include')
 SAGE_DEV = os.path.join(sage.env.SAGE_ROOT, 'src')
 
-sage_env['CYTHONFLAGS'] = "--cplus -I"+SAGE_DEV
-sage_env.Append(CPPPATH = [SAGE_PYTHON, SAGE_INC,
-                           SAGE_C, SAGE_DEV],
+
+perm16cython  = env.Cython(target = 'perm16mod.cpp',
+                           source = 'perm16mod.pyx',
+                           CYTHONFLAGS = ["--cplus",  "-I"+SAGE_DEV]
+)
+
+sage_env = env.Clone()
+sage_env.Append(CPPPATH = [SAGE_PYTHON, SAGE_INC, SAGE_C, SAGE_DEV],
                 LIBPATH = ['.', SAGE_LIB],
                 LIBS = ['libgroup16', 'csage'],
                 RPATH   = ['.', SAGE_LIB]
 )
-perm16cython  = sage_env.Cython(target = 'perm16mod.cpp',
-                                source = 'perm16mod.pyx')
 Depends(perm16cython, Split('perm16mod.pxd group16.pxd'))
 perm16mod = sage_env.SharedLibrary(
     target = 'perm16mod', source = [perm16cython], SHLIBPREFIX='')
