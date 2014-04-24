@@ -7,14 +7,18 @@
 #include "group_examples.hpp"
 #include <iostream>
 
-PermutationGroup<> S3 = GroupExamples<>::S3;
-PermutationGroup<> g100  = GroupExamples<>::g100;
-PermutationGroup<> g_Borie  = GroupExamples<>::g_Borie;
+struct Fixture {
+
+  PermutationGroup<> &S3 = GroupExamples<>::S3;
+  PermutationGroup<> &g100  = GroupExamples<>::g100;
+  PermutationGroup<> &g_Borie  = GroupExamples<>::g_Borie;
+
+};
 
 //____________________________________________________________________________//
 
 
-BOOST_AUTO_TEST_SUITE( group16_test )
+BOOST_FIXTURE_TEST_SUITE( group16_test, Fixture )
 
 BOOST_AUTO_TEST_CASE( check_sgs_test )
 {
