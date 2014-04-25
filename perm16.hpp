@@ -34,30 +34,24 @@ struct Vect16
   uint8_t operator[](uint64_t i) const { return p[i]; }
   uint8_t &operator[](uint64_t i) { return p[i]; }
 
-  bool operator==(const Vect16 &vp) const {
-    #ifdef GCC_VECT_CMP
-    return _mm_movemask_epi8(v8 == vp.v8)==0xffff;
-    #else
-    return _mm_movemask_epi8(_mm_cmpeq_epi8(v, vp.v))==0xffff;
-    #endif
+  inline uint64_t first_diff(const Vect16 &b) const {
+    return _mm_cmpestri (v, 16, b.v, 16, FIRST_DIFF);
   }
 
-  bool operator < (const Vect16 &b) const {
-    uint64_t diff = _mm_cmpestri (v, 16, b.v, 16, FIRST_DIFF);
-    // Check for speed:
-    // return (diff == 16) ? false : p[diff] < b.p[diff];
-    #ifdef GCC_VECT_CMP
-    uint64_t diffs = _mm_movemask_epi8(v8 < b.v8);
-    #else
-    uint64_t diffs = _mm_movemask_epi8(_mm_cmplt_epi8(v, b.v));
-    #endif
-    return (diffs >> diff) & 0x1;;
+  inline bool operator==(const Vect16 &b) const {
+    return first_diff(b) == 16;
+  }
+
+  inline bool operator < (const Vect16 &b) const {
+    uint64_t diff = first_diff(b);
+    return (diff != 16) and p[diff] < b.p[diff];
   }
 
   char less_partial(const Vect16 &b, int k) const {
     uint64_t diff = _mm_cmpestri (v, k, b.v, k, FIRST_DIFF);
     return (diff == 16) ? 0 : char(p[diff]) - char(b.p[diff]);
   }
+
 
   Vect16 permuted(const Vect16 &other) const {
     Vect16 res;
@@ -78,7 +72,6 @@ struct Vect16
       _mm_cmpestri(idv, 16, v, 16, FIRST_NON_ZERO) == 16 and // all(x in idv for x in v)
       _mm_cmpestri(v, 16, idv, 16, FIRST_NON_ZERO) == 16 and // all(x in v for x in idv)
       (diff == 16 or diff < N);     // v = idv    or    last diff index < N
-      ;
   }
 
 } __attribute__ ((aligned (16)));
@@ -98,13 +91,17 @@ namespace std {
     }
   };
 
-  // TODO test for speed
-  // template<>
-  // struct less<Vect16> {
-  //   size_t operator () (const Vect16 &v1, const Vect16 &v2) const {
-  //     return v1[0] == v2[0] ? v1[1] < v2[1] : v1[0] < v2[0];
-  //   }
-  // };
+  template<>
+  struct less<Vect16> {
+    // WARNING: due to endianess this is not lexicographic comparison,
+    //          but we don't care when using is std::set.
+    // 10% faster than calling the lexicographic comparison operator !
+    // returning a size_t is 2% even faster !
+    size_t operator () (const Vect16 &v1, const Vect16 &v2) const {
+      return v1.v[0] == v2.v[0] ? v1.v[1] < v2.v[1] : v1.v[0] < v2.v[0];
+    }
+
+  };
 }
 
 #include <ostream>

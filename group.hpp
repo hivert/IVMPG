@@ -21,14 +21,13 @@
   #include <cilk/cilk.h>
   #include <cilk/cilk_api.h>
   #include <cilk/reducer_list.h>
+  #include <cilk/reducer_opadd.h>
 #else
   #define cilk_spawn
 #endif
 
-struct Perm16;
 
 #include "perm16.hpp"
-
 template< class perm  = Perm16 >
 class PermutationGroup {
 
@@ -50,12 +49,14 @@ public:
 
   bool is_canonical(const vect &v) const;
   list elements_of_depth(uint64_t depth) const;
+  uint64_t elements_of_depth_number(uint64_t depth) const;
 
   bool check_sgs() const {
     for (uint64_t level = 0; level<sgs.size(); level++)
-      //  for (auto &v : sgs[level]) {
+      // CILK bugs with range for
+      //for (auto &v : sgs[level]) {
       for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
-	Perm16 v = *ip;
+	auto v = *ip;
 	if (not v.is_permutation(N)) return false;
 	for (uint64_t i=0; i<level; i++)
 	  if (not (v[i] == i)) return false;
@@ -88,12 +89,15 @@ private:
   };
 
 #ifdef USE_CILK
+  using counter = cilk::reducer_opadd< uint64_t >;
   using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
 #else
+  using counter = uint64_t;
   using list_generator = std::list< vect, allocator<vect> >;
 #endif
 
   void walk_tree(vect v, list_generator &res, int remaining_depth) const;
+  void walk_tree_counter(vect v, counter &res, int remaining_depth) const;
 
 public:
 
@@ -132,16 +136,18 @@ bool PermutationGroup<perm>::is_canonical(const vect &v) const {
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
     auto &transversal = sgs[i];
+    // CILK bugs with range for
     //    for (vect list_test : to_analyse) {
     for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
       vect list_test = *itl;
+      // CILK bugs with range for
       // for (vect x : transversal) {
       for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
 	vect x = *itv;
         child = list_test.permuted(x);
-        char comp = v.less_partial(child, i+1);
-        if (comp == 0) new_to_analyse.insert(child);
-        else if (comp < 0) return false;
+	// Slight change from Borie's algorithm's: we do a full lex comparison first.
+	if (v < child) return false;
+        if (v.first_diff(child) > i) new_to_analyse.insert(child);
       }
     }
     to_analyse.swap(new_to_analyse);
@@ -176,5 +182,33 @@ PermutationGroup<perm>::elements_of_depth(uint64_t depth) const {
 #endif
 }
 
+
+
+template<class perm>
+void PermutationGroup<perm>::walk_tree_counter(
+   vect v, counter &res, int remaining_depth) const
+{
+  if (remaining_depth == 0) res++;
+  else for (auto ch = children(v); ch.is_not_end(); ++ch) {
+      vect child = *ch;
+      if (is_canonical(child))
+	cilk_spawn this->walk_tree_counter(child, res, remaining_depth-1);
+    }
+}
+
+
+template<class perm>
+uint64_t
+PermutationGroup<perm>::elements_of_depth_number(uint64_t depth) const {
+  vect zero_vect;
+  counter cnt_res;
+  zero_vect.v = __m128i {0, 0};
+  walk_tree_counter(zero_vect, cnt_res, depth);
+#ifdef USE_CILK
+  return cnt_res.get_value();
+#else
+  return cnt_res;
+#endif
+}
 
 #endif
