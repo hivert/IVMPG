@@ -65,6 +65,11 @@ struct Vect16
     return _mm_cmpestri(zero, 1, v, bound, IDX_MODE);
   }
 
+  uint64_t last_non_zero(int bound=16) const { return search_index<LAST_NON_ZERO>(bound); }
+  uint64_t first_non_zero(int bound=16) const { return search_index<FIRST_NON_ZERO>(bound); }
+  uint64_t last_zero(int bound=16) const { return search_index<LAST_ZERO>(bound); }
+  uint64_t first_zero(int bound=16) const { return search_index<FIRST_ZERO>(bound); }
+
   bool is_permutation(const size_t N = 16) const {
     constexpr const __m128i idv = __m128i(epi8 {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15});
     uint64_t diff = _mm_cmpestri(v, 16, idv, 16, LAST_DIFF);

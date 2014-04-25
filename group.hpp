@@ -75,7 +75,7 @@ private:
   public:
 
     ChildrenIterator(const PermutationGroup &gr, const vect &v) : gr(gr), father(v) {
-      uint64_t id = father.template search_index<LAST_NON_ZERO>(gr.N);
+      uint64_t id = father.last_non_zero(gr.N);
       ind = id;
       if (ind >= gr.N) ind = 0;
     };
