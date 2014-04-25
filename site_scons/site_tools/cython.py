@@ -4,24 +4,22 @@ Tool to run Cython files (.pyx) into .c and .cpp.
 TODO:
  - Add support for dynamically selecting in-process Cython
    through CYTHONINPROCESS variable.
- - Have a CYTHONCPP option which turns on C++ in flags and
-   changes output extension at the same time
 
 VARIABLES:
  - CYTHON - The path to the "cython" command line tool.
  - CYTHONFLAGS - Flags to pass to the "cython" command line tool.
+ - CYTHONLANG - "c++" or "c".
 
 AUTHORS:
  - David Cournapeau
  - Dag Sverre Seljebotn
-
+ - Florent Hivert
 """
 import SCons
 from SCons.Builder import Builder
 from SCons.Action import Action
 
 #def cython_action(target, source, env):
-#    print target, source, env
 #    from Cython.Compiler.Main import compile as cython_compile
 #    res = cython_compile(str(source[0]))
 

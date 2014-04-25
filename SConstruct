@@ -1,6 +1,10 @@
 import os
-from utils import *
 import cpuAVX, cilk
+from SCons.Errors import StopError
+from SCons.Warnings import warn, Warning, enableWarningClass
+
+class ConfigureWarning(Warning): pass
+enableWarningClass(ConfigureWarning)
 
 ######################################################################################
 
@@ -28,6 +32,7 @@ Help(vars.GenerateHelpText(env))
 
 ######################################################################################
 
+
 if not env.GetOption('clean') and not env.GetOption('help'):
 
     conf = Configure(env, config_h = "config.h" )
@@ -37,19 +42,19 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     if env['cilk'] and conf.CheckCilkPlusCompiler():
         conf.Define('USE_CILK', 1, 'Set to 1 if using Cilk compiler')
     elif not conf.CheckCXX():
-        Fail('!! Your compiler and/or environment is not correctly configured.')
+        raise StopError('!! Your compiler and/or environment is not correctly configured.')
 
     for lib in Split('cstdint array iostream x86intrin.h'):
         if not conf.CheckCXXHeader(lib):
-            Fail("You need '%s' to compile this program"%(lib))
+            raise StopError("You need '%s' to compile this program"%(lib))
     for typ, include in [('uint8_t', 'cstdint'),
                          ('uint64_t', 'cstdint'),
                          ('__m128i', 'x86intrin.h')]:
         if not conf.CheckType(typ, '#include <%s>\n'%include, 'c++'):
-            Fail("Did not find '%s' in '%s'"%(typ, include))
+            raise StopError("Did not find '%s' in '%s'"%(typ, include))
 
     if not conf.CheckProcInstructionSets(["POPCNT", "SSE4_2", "AVX"]):
-        Fail("Your processor doesn't seems to support avx instuction set !")
+        raise StopError("Your processor doesn't seems to support avx instuction set !")
     else:
         env.Append(CXXFLAGS = ['-mavx', '-mtune=native']) # TODO check sse4.2 is ok
     if conf.CheckGCCVectorExtension():
@@ -59,8 +64,9 @@ if not env.GetOption('clean') and not env.GetOption('help'):
         conf.Define('USE_BOOST_FLAT_SET', 1,
                     "Set to 1 if using 'boost::container::flat_set' instead of 'std::set'")
     else:
-        print("Unable to find 'boost::container::flat_set'!")
-        print("Falling back to default 'std::set'.")
+        warn(ConfigureWarning,
+             "Unable to find 'boost::container::flat_set'!"
+             "\n                Falling back to default 'std::set'.\n")
 
     if isinstance(env['tbb'], str):
         env.Append(CPPPATH = [os.path.join(env['tbb'], 'include')],
@@ -71,11 +77,12 @@ if not env.GetOption('clean') and not env.GetOption('help'):
         if ( conf.CheckLibWithHeader('tbb', 'tbb/scalable_allocator.h', 'c++') and
              conf.CheckLibWithHeader('tbbmalloc', 'tbb/scalable_allocator.h', 'c++')):
            conf.Define('USE_TBB', 1,
-                       "Set to 1 if using 'tbb::scalable_allocator' instead of 'std::allocator'")
+                       "Set to 1 if using 'tbb::scalable_allocator'"
+                       "instead of 'std::allocator'")
         else:
-            print("Unable to find TBB ! "
-                  "Please add 'tbb=<tbb_path> to the command line")
-            print("Falling back to default allocator")
+            warn(ConfigureWarning, "Unable to find TBB ! "
+                 "Please add 'tbb=<tbb_path> to the command line"
+                 "\n                Falling back to default allocator\n")
     env = conf.Finish()
 
 ######################################################################################
@@ -86,7 +93,7 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     test_conf = Configure(test_env)
     if not test_conf.CheckLibWithHeader('boost_unit_test_framework',
                                         'boost/test/unit_test.hpp', 'c++'):
-        Fail("Did not find 'boost unit test', unable to perform check !")
+        raise StopError("Did not find 'boost unit test', unable to perform check !")
     test_env = test_conf.Finish()
 
 ######################################################################################
@@ -134,8 +141,7 @@ def sage_test(env,target,source):
         subprocess.call(
             [os.path.join(sage.env.SAGE_ROOT, 'sage'), '-t', source[0].abspath])
     except Exception,e:
-        print "Unable to call Sage: Exception %s"%(str(e))
-
+        return "Unable to call Sage: %s"%(str(e))
 
 test_env.Alias('check', ['testmod.py', perm16mod], sage_test)
 test_env.Alias('check', [perm16_test], perm16_test[0].abspath)

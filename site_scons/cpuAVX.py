@@ -10,7 +10,8 @@ cpuid_header = """
 
     int main() {
       unsigned int ax, bx, cx, dx;
-      FAIL(__get_cpuid(0x00000001, &ax, &bx, &cx, &dx), "Unable to determine the processor type !");
+      FAIL( __get_cpuid(0x00000001, &ax, &bx, &cx, &dx),
+            "Unable to determine the processor type !" );
 """
 footer = """
       return EXIT_SUCCESS;
