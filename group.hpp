@@ -84,8 +84,7 @@ public:
 
 template <class perm>
 std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g) {
-  stream << g.name;
-  return stream;
+  return stream << g.name;
 }
 
 
