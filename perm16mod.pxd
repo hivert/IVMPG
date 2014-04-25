@@ -10,6 +10,7 @@ cdef class PermGroup16(SageObject):
 
     cpdef _check_sgs(self)
     cpdef Vect16List element_of_depth(self, int depth)
+    cpdef bint is_canonical(self, Vect16 v)
 
 cdef class Vect16(SageObject):
     cdef group16.Vect16 _p

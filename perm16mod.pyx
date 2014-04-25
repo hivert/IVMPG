@@ -1,3 +1,5 @@
+#clang C++
+
 import cython
 from sage.rings.integer cimport Integer
 from sage.structure.sage_object cimport SageObject
@@ -14,6 +16,15 @@ from sage.groups.perm_gps.permgroup import PermutationGroup_generic as SagePG
 
 cdef class PermGroup16(SageObject):
     def __init__(self, gr):
+        """
+        sage: import os; os.sys.path.insert(0,os.path.abspath('.'))
+        sage: import perm16mod
+        sage: G6 = PermutationGroup([[(3,5),(4,6)], [(1,2),(3,4),(5,6)], [(1,4,6),(2,3,5)]])
+        sage: G6cpp = perm16mod.PermGroup16(G6)
+        sage: G6cpp._check_sgs()
+        sage: G6cpp
+        C++ wrapper around Permutation Group with generators [(3,5)(4,6), (1,2)(3,4)(5,6), (1,4,6)(2,3,5)]
+        """
         cdef stl_vector[stl_vector[group16.Perm16]] sgs
         cdef stl_vector[group16.Perm16] lev
         cdef group16.Perm16 p16
@@ -53,9 +64,25 @@ cdef class PermGroup16(SageObject):
         sig_off()
         return res
 
+    cpdef bint is_canonical(self, Vect16 v):
+        return self._g.is_canonical(v._p)
+
+cdef list defaultdom = range(1,17)
+
 cdef class Vect16(SageObject):
-    def __init__(self):
-        raise RuntimeError, "You are not supposed to call init"
+    def __init__(self, list l, PermGroup16 dom=None):
+        cdef int i
+        if dom is None:
+            self.dom = defaultdom
+        else:
+            self.dom = dom.dom
+
+        if len(l) >= len(self.dom):
+            raise ValueError, "list too long"
+        for i in range(len(l)):
+            self._p[i] = l[i]
+        for i in range(len(l), 16):
+            self._p[i] = 0
 
     def __len__(self):
         return len(self.dom)
