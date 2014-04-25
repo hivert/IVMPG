@@ -87,7 +87,7 @@ if not env.GetOption('clean') and not env.GetOption('help'):
 
 ######################################################################################
 
-test_env = env.Clone()
+test_env = env.Clone(SAGE_TESTS_OPTS=[])
 
 if not env.GetOption('clean') and not env.GetOption('help'):
     test_conf = Configure(test_env)
@@ -117,7 +117,8 @@ perm16mod  = env.Cython('perm16mod.pyx',
 Depends(perm16mod, Split('perm16mod.pxd group16.pxd'))
 
 sage_env = env.Clone()
-sage_env.Append(CPPPATH = SAGE_INCLUDE_DIR,
+sage_env.Append(CPPFLAGS = '-fno-strict-aliasing',
+                CPPPATH = SAGE_INCLUDE_DIR,
                 LIBPATH = [SAGE_LIB],
                 LIBS    = ['csage'],
                 RPATH   = [SAGE_LIB]
@@ -133,17 +134,25 @@ group_time  = test_env.Program('timing.cpp')
 
 ######################################################################################
 
-test_env.AlwaysBuild(Alias('check'))
 
 def sage_test(env,target,source):
     import subprocess
     try:
-        subprocess.call(
-            [os.path.join(sage.env.SAGE_ROOT, 'sage'), '-t', source[0].abspath])
+        result = subprocess.call(
+            [os.path.join(sage.env.SAGE_ROOT, 'sage'), '-t'] +
+            env['SAGE_TESTS_OPTS'] +
+            [source[0].abspath])
     except Exception,e:
         return "Unable to call Sage: %s"%(str(e))
+    else:
+        return result
 
-test_env.Alias('check', ['testmod.py', perm16mod], sage_test)
+test_env.AlwaysBuild(Alias('check'), Alias('checkperm16mod'), Alias('checktestmod'))
+checkperm16mod = test_env.Alias('checkperm16mod', ['perm16mod.pyx', perm16mod],
+                          sage_test, SAGE_TESTS_OPTS=['--force-lib'])
+
+checktestmod = test_env.Alias('checktestmod', ['testmod.py', perm16mod], sage_test)
+test_env.Alias('check', [checkperm16mod, checktestmod])
 test_env.Alias('check', [perm16_test], perm16_test[0].abspath)
 test_env.Alias('check', [group_test], group_test[0].abspath)
 
