@@ -84,7 +84,7 @@ private:
 #endif
 
   struct ResultList {
-    using type = typename PermutationGroup<perm>::list_generator;
+    using type = list_generator;
     using type_result = list;
     static void update(type &lst, vect v) { lst.push_back(v); }
     static type_result get_value(type &lst) {
@@ -97,7 +97,7 @@ private:
   };
 
   struct ResultCounter {
-    using type = typename PermutationGroup<perm>::counter;
+    using type = counter;
     using type_result = uint64_t;
     static void update(type &counter, vect v) { counter++; }
     static type_result get_value(type &counter) {
@@ -182,8 +182,7 @@ bool PermutationGroup<perm>::is_canonical(vect v) const {
 
 
 template<class perm>
-typename PermutationGroup<perm>::vect
-PermutationGroup<perm>::canonical(vect v) const {
+auto PermutationGroup<perm>::canonical(vect v) const -> vect {
   set<vect> to_analyse, new_to_analyse;
   vect child;
 
@@ -211,9 +210,8 @@ PermutationGroup<perm>::canonical(vect v) const {
 
 template<class perm>
 template<class Res>
-void PermutationGroup<perm>::walk_tree(
-    vect v, typename Res::type &res,
-    uint64_t target_depth, uint64_t depth) const
+void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
+				       uint64_t target_depth, uint64_t depth) const
 {
   if (depth == target_depth) Res::update(res, v);
   else for (auto ch = children(v); ch.is_not_end(); ++ch) {
@@ -237,8 +235,7 @@ PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
 
 
 template<class perm>
-typename PermutationGroup<perm>::list
-PermutationGroup<perm>::elements_of_depth(uint64_t depth) const {
+auto PermutationGroup<perm>::elements_of_depth(uint64_t depth) const -> list {
   return elements_of_depth_walk<ResultList>(depth);
 }
 

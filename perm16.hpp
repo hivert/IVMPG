@@ -23,7 +23,7 @@ const char LAST_NON_ZERO = (_SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY |
 			    _SIDD_MASKED_NEGATIVE_POLARITY | _SIDD_MOST_SIGNIFICANT);
 
 
-struct Vect16
+struct alignas(16) Vect16
 {
   union {
     vect16 p;
@@ -79,7 +79,7 @@ struct Vect16
       (diff == 16 or diff < N);     // v = idv    or    last diff index < N
   }
 
-} __attribute__ ((aligned (16)));
+};
 
 namespace std {
 
