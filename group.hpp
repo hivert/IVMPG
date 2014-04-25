@@ -50,6 +50,15 @@ public:
   vect canonical(vect v) const;
   list elements_of_depth(uint64_t depth) const;
   uint64_t elements_of_depth_number(uint64_t depth) const;
+  template<typename Res> //  should implement the following interface:
+  // struct Res {
+  //   using type = ...
+  //   using type_result = ...
+  //   static void update(type &res, vect v)   // update res with v
+  //   static type_result get_value(type &res) // return value in res
+  // };
+  typename Res::type_result elements_of_depth_walk(uint64_t depth) const;
+
   ChildrenIterator children(const vect &v) const { return {*this, v}; }
 
 private:
@@ -61,9 +70,9 @@ private:
   public:
     ChildrenIterator(const PermutationGroup &gr, const vect &v) :
       gr(gr), father(v), ind(father.last_non_zero(gr.N)) { if (ind >= gr.N) ind = 0; };
-    void operator++() { ind++;}
+    void operator++() { ++ind; }
     bool is_not_end() const { return ind < gr.N; }
-    vect operator *() const { vect res = father; res.p[ind]++; return res; }
+    vect operator *() const { vect res = father; ++res.p[ind]; return res; }
   };
 
 #ifdef USE_CILK
@@ -78,18 +87,31 @@ private:
     using type = typename PermutationGroup<perm>::list_generator;
     using type_result = list;
     static void update(type &lst, vect v) { lst.push_back(v); }
+    static type_result get_value(type &lst) {
+      #ifdef USE_CILK
+        return lst.get_value();
+      #else
+        return lst;
+      #endif
+    }
   };
 
   struct ResultCounter {
     using type = typename PermutationGroup<perm>::counter;
     using type_result = uint64_t;
     static void update(type &counter, vect v) { counter++; }
+    static type_result get_value(type &counter) {
+      #ifdef USE_CILK
+        return counter.get_value();
+      #else
+        return counter;
+      #endif
+    }
   };
 
   template<class Res>
-  void walk_tree(vect v, typename Res::type &res, int remaining_depth) const;
-  template<class Res>
-  typename Res::type_result elements_of_depth_walk(uint64_t depth) const;
+  void walk_tree(vect v, typename Res::type &res,
+		 uint64_t target_depth, uint64_t depth) const;
 
 };
 
@@ -133,8 +155,9 @@ bool PermutationGroup<perm>::check_sgs() const {
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v) const {
   set<vect> to_analyse, new_to_analyse;
-  to_analyse.insert(v);
   vect child;
+
+  to_analyse.insert(v);
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
     auto &transversal = sgs[i];
@@ -162,8 +185,9 @@ template<class perm>
 typename PermutationGroup<perm>::vect
 PermutationGroup<perm>::canonical(vect v) const {
   set<vect> to_analyse, new_to_analyse;
-  to_analyse.insert(v);
   vect child;
+
+  to_analyse.insert(v);
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
     auto &transversal = sgs[i];
@@ -188,13 +212,14 @@ PermutationGroup<perm>::canonical(vect v) const {
 template<class perm>
 template<class Res>
 void PermutationGroup<perm>::walk_tree(
-    vect v, typename Res::type &res, int remaining_depth) const
+    vect v, typename Res::type &res,
+    uint64_t target_depth, uint64_t depth) const
 {
-  if (remaining_depth == 0) Res::update(res, v);
+  if (depth == target_depth) Res::update(res, v);
   else for (auto ch = children(v); ch.is_not_end(); ++ch) {
       vect child = *ch;
       if (is_canonical(child))
-	cilk_spawn this->walk_tree<Res>(child, res, remaining_depth-1);
+	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1);
     }
 }
 
@@ -204,14 +229,10 @@ template<class Res>
 typename Res::type_result
 PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
   vect zero_vect;
-  typename Res::type list_res;
+  typename Res::type res;
   zero_vect.v = __m128i {0, 0};
-  walk_tree<Res>(zero_vect, list_res, depth);
-#ifdef USE_CILK
-  return list_res.get_value();
-#else
-  return list_res;
-#endif
+  walk_tree<Res>(zero_vect, res, depth, 0);
+  return Res::get_value(res);
 }
 
 
