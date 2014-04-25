@@ -34,58 +34,33 @@ class PermutationGroup {
 public:
 
   using vect = typename perm::vect;
+  using list = std::list<vect, allocator<vect> >;
   using StrongGeneratingSet = std::vector< std::vector< perm > >;
 
   const std::string name;
   const uint64_t N;
   const StrongGeneratingSet sgs;
 
-public:
-
-  using list = std::list<vect, allocator<vect> >;
-
   PermutationGroup(std::string name, uint64_t N, StrongGeneratingSet sgs) :
     name(name), N(N), sgs(sgs) { assert(check_sgs()); };
-
-  bool is_canonical(const vect &v) const;
+  bool check_sgs() const;
+  bool is_canonical(vect v) const;
+  vect canonical(vect v) const;
   list elements_of_depth(uint64_t depth) const;
   uint64_t elements_of_depth_number(uint64_t depth) const;
-
-  bool check_sgs() const {
-    for (uint64_t level = 0; level<sgs.size(); level++)
-      // CILK bugs with range for
-      //for (auto &v : sgs[level]) {
-      for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
-	auto v = *ip;
-	if (not v.is_permutation(N)) return false;
-	for (uint64_t i=0; i<level; i++)
-	  if (not (v[i] == i)) return false;
-      }
-    return true;
-  }
 
 private:
 
   class ChildrenIterator {
-
     const PermutationGroup &gr;
     const vect &father;
     uint64_t ind;
-
   public:
-
-    ChildrenIterator(const PermutationGroup &gr, const vect &v) : gr(gr), father(v) {
-      uint64_t id = father.last_non_zero(gr.N);
-      ind = id;
-      if (ind >= gr.N) ind = 0;
-    };
+    ChildrenIterator(const PermutationGroup &gr, const vect &v) :
+      gr(gr), father(v), ind(father.last_non_zero(gr.N)) { if (ind >= gr.N) ind = 0; };
     void operator++() { ind++;}
     bool is_not_end() const { return ind < gr.N; }
-    vect operator *() const {
-      vect res = father;
-      res.p[ind]++;
-      return res;
-    }
+    vect operator *() const { vect res = father; res.p[ind]++; return res; }
   };
 
 #ifdef USE_CILK
@@ -114,6 +89,20 @@ std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g
 }
 
 
+template<class perm>
+bool PermutationGroup<perm>::check_sgs() const {
+  for (uint64_t level = 0; level<sgs.size(); level++)
+    // CILK bugs with range for
+    //for (auto &v : sgs[level]) {
+    for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
+      auto v = *ip;
+      if (not v.is_permutation(N)) return false;
+      for (uint64_t i=0; i<level; i++)
+	if (not (v[i] == i)) return false;
+    }
+  return true;
+}
+
 
 //template<class T>
 //using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator>;
@@ -128,8 +117,9 @@ std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g
   using set = std::set< T, std::less<T>, allocator<T> >;
 #endif
 
+
 template<class perm>
-bool PermutationGroup<perm>::is_canonical(const vect &v) const {
+bool PermutationGroup<perm>::is_canonical(vect v) const {
   set<vect> to_analyse, new_to_analyse;
   to_analyse.insert(v);
   vect child;
@@ -153,6 +143,34 @@ bool PermutationGroup<perm>::is_canonical(const vect &v) const {
     to_analyse.swap(new_to_analyse);
   }
   return true;
+}
+
+
+template<class perm>
+typename PermutationGroup<perm>::vect
+PermutationGroup<perm>::canonical(vect v) const {
+  set<vect> to_analyse, new_to_analyse;
+  to_analyse.insert(v);
+  vect child;
+  for (uint64_t i=0; i < N-1; i++) {
+    new_to_analyse.clear();
+    auto &transversal = sgs[i];
+    for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
+      vect list_test = *itl;
+      for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
+	vect x = *itv;
+        child = list_test.permuted(x);
+	// TODO: find a better algorithm !
+	// TODO: the following doesn't work:
+	//       if (v.less_partial(child, i+1) < 0) v = child;
+	//       if (v < child) v = child;
+	if (v < child) return canonical(child);
+	else if (v.first_diff(child) > i) new_to_analyse.insert(child);
+      }
+    }
+    to_analyse.swap(new_to_analyse);
+  }
+  return v;
 }
 
 template<class perm>

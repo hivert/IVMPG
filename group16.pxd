@@ -35,7 +35,8 @@ cdef extern from "group16.hpp" nogil:
 
         PermutationGroup16(stl_string name, uint64_t N, StrongGeneratingSet sgs)
 
-        bint is_canonical(const Vect16 &v) const
+        Vect16 canonical(Vect16 v) const
+        bint is_canonical(Vect16 v) const
         bint check_sgs() const
 
         PG16list elements_of_depth(uint64_t depth) const
