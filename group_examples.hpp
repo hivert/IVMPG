@@ -3,24 +3,22 @@
 
 #include "group.hpp"
 
-template< class perm  = Perm16 >
-struct GroupExamples
-{
-  static PermutationGroup<perm> S3, g100, g_Borie;
+template< class Group = PermutationGroup<> > struct GroupExamples {
+  static Group S3, g100, g_Borie;
 };
 
 
 // Symmetric group of order 3
-template< class perm >
-PermutationGroup<perm> GroupExamples<perm>::S3("S3", 3, {
+template< class Group >
+Group GroupExamples< Group >::S3("S3", 3, {
     {{0,1,2}, {1,0,2}, {2,1,0}},
     {{0,1,2}, {0,2,1}},
     {{0,1,2}}
   });;
 
 // transitive subgroup of S6 number 100 according to Sage
-template< class perm >
-PermutationGroup<perm> GroupExamples<perm>::g100("Transitive Group (6, 100)", 6,
+template< class Group >
+Group GroupExamples< Group >::g100("Transitive Group (6, 100)", 6,
 {{{0, 1, 2, 3, 4, 5},
   {1, 0, 3, 2, 5, 4},
   {3, 2, 4, 5, 1, 0},
@@ -35,8 +33,8 @@ PermutationGroup<perm> GroupExamples<perm>::g100("Transitive Group (6, 100)", 6,
  {{0, 1, 2, 3, 4, 5}}});
 
 // N. Borie's favorite faforite subgroup of S16
-template< class perm >
-PermutationGroup<perm> GroupExamples<perm>::g_Borie("N. Borie's favorite", 16,
+template< class Group >
+Group GroupExamples< Group >::g_Borie("N. Borie's favorite", 16,
 {{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},
   {7, 6, 5, 4, 3, 0, 2, 1, 13, 12, 15, 14, 11, 8, 10, 9},
   {12, 15, 14, 13, 11, 10, 8, 9, 5, 6, 7, 4, 0, 2, 1, 3},
