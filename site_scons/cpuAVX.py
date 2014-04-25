@@ -1,5 +1,5 @@
 import SCons.SConf
-from utils import *
+from SCons.Errors import StopError
 
 cpuid_header = """
     #include <cpuid.h>
@@ -25,7 +25,7 @@ def EnsureCPUID(context):
     if cpuid_checked:
         return
     if not SCons.SConf.CheckCXXHeader(context, "cpuid.h"):
-        Fail("You need 'cpuid.h' to check CPU instruction sets")
+        raise StopError("You need 'cpuid.h' to check CPU instruction sets")
     cpuid_checked = True
 
 def CheckProcInstructionSets(context, names):

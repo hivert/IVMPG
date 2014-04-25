@@ -1,6 +1,5 @@
+import os
 import SCons.SConf
-from utils import *
-
 
 def CheckCilkPlusCompiler(context):
     test = """
