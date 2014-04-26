@@ -8,9 +8,10 @@
 using namespace std;
 using namespace std::chrono;
 
-PermutationGroup<> g_Borie  = GroupExamples<>::g_Borie;
+using MyGroup = PermutationGroup16;
+MyGroup g_Borie = GroupExamples< MyGroup >::g_Borie;
 
-long time_it(PermutationGroup16 gr, int level) {
+long time_it(MyGroup gr, int level) {
   high_resolution_clock::time_point tstart, tfin;
 
   cout << gr.name << " ( " << level << " ) : " << flush;
@@ -24,7 +25,7 @@ long time_it(PermutationGroup16 gr, int level) {
   return lst.size();
 }
 
-long count_it(PermutationGroup16 gr, int level) {
+long count_it(MyGroup gr, int level) {
   high_resolution_clock::time_point tstart, tfin;
 
   cout << gr.name << " ( " << level << " ) : " << flush;

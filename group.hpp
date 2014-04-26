@@ -226,9 +226,8 @@ template<class perm>
 template<class Res>
 typename Res::type_result
 PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
-  vect zero_vect;
-  typename Res::type res;
-  zero_vect.v = __m128i {0, 0};
+  vect zero_vect {};
+  typename Res::type res {};
   walk_tree<Res>(zero_vect, res, depth, 0);
   return Res::get_value(res);
 }
