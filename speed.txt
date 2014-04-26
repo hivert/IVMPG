@@ -1,11 +1,11 @@
 Counting: 
-N. Borie's favorite ( 15 ) : 6686 (time = 0.013853s).
-N. Borie's favorite ( 20 ) : 57605 (time = 0.104109s).
+N. Borie's favorite ( 15 ) : 6686 (time = 0.013848s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.104081s).
 N. Borie's favorite ( 25 ) : 375810 (time = 0.672288s).
-N. Borie's favorite ( 30 ) : 1983238 (time = 3.5117s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 3.50853s).
 Listing:
-N. Borie's favorite ( 15 ) : 6686 (time = 0.014154s). 
-N. Borie's favorite ( 20 ) : 57605 (time = 0.106978s).
+N. Borie's favorite ( 15 ) : 6686 (time = 0.012717s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.106966s).
 N. Borie's favorite ( 25 ) : 375810 (time = 0.692024s).
-N. Borie's favorite ( 30 ) : 1983238 (time = 3.61227s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 3.60689s).
 
