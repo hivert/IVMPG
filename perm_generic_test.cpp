@@ -3,9 +3,9 @@
 #define BOOST_TEST_MODULE perm_generic
 #include <boost/test/unit_test.hpp>
 
-#include "perm16.hpp"
+#include "perm_generic.hpp"
 
-using PermType = Perm16;
+using PermType = PermGeneric<16>;
 using VectType = PermType::vect;
 
 struct Fixture {

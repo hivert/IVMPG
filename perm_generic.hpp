@@ -69,6 +69,10 @@ struct VectGeneric {
   }
 };
 
+// Definition since previously *only* declared
+template < size_t _N, typename Expo >
+const constexpr size_t VectGeneric<_N,Expo>::N;
+
 namespace std {
 
   template<>
