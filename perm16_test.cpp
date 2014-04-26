@@ -23,11 +23,11 @@ struct Fixture {
 
 };
 
-auto less     = [](Vect16 a, Vect16 b) {return a < b;};
-auto not_less = [](Vect16 a, Vect16 b) {return not(a < b);};
+auto less     = [](const Vect16 a, const Vect16 b) {return a < b;};
+auto not_less = [](const Vect16 a, const Vect16 b) {return not(a < b);};
 
-auto is_perm     = [](Vect16 a, int i=16) {return a.is_permutation(i);};
-auto is_not_perm = [](Vect16 a, int i=16) {return not a.is_permutation(i);};
+auto is_perm     = [](const Vect16 a, int i=16) {return a.is_permutation(i);};
+auto is_not_perm = [](const Vect16 a, int i=16) {return not a.is_permutation(i);};
 
 //____________________________________________________________________________//
 
@@ -115,50 +115,50 @@ BOOST_AUTO_TEST_CASE( operator_less_partial_test )
   BOOST_CHECK_GT( PPb.less_partial(PPa, 5), 0 );
 }
 
-BOOST_AUTO_TEST_CASE( search_first_zero_test )
+BOOST_AUTO_TEST_CASE( first_zero_test )
 {
-  BOOST_CHECK_EQUAL( zero.search_index<FIRST_ZERO>(), 0);
-  BOOST_CHECK_EQUAL( P01.search_index<FIRST_ZERO>(), 0);
-  BOOST_CHECK_EQUAL( PPa.search_index<FIRST_ZERO>(), 4);
-  BOOST_CHECK_EQUAL( P10.search_index<FIRST_ZERO>(), 1);
-  BOOST_CHECK_EQUAL( P1.search_index<FIRST_ZERO>(), 16);
-  BOOST_CHECK_EQUAL( P10.search_index<FIRST_ZERO>(1), 16);
-  BOOST_CHECK_EQUAL( PPa.search_index<FIRST_ZERO>(5), 4);
-  BOOST_CHECK_EQUAL( PPa.search_index<FIRST_ZERO>(3), 16);
+  BOOST_CHECK_EQUAL( zero.first_zero(), 0);
+  BOOST_CHECK_EQUAL( P01.first_zero(), 0);
+  BOOST_CHECK_EQUAL( PPa.first_zero(), 4);
+  BOOST_CHECK_EQUAL( P10.first_zero(), 1);
+  BOOST_CHECK_EQUAL( P1.first_zero(), 16);
+  BOOST_CHECK_EQUAL( P10.first_zero(1), 16);
+  BOOST_CHECK_EQUAL( PPa.first_zero(5), 4);
+  BOOST_CHECK_EQUAL( PPa.first_zero(3), 16);
 }
 
-BOOST_AUTO_TEST_CASE( search_last_zero_test )
+BOOST_AUTO_TEST_CASE( last_zero_test )
 {
-  BOOST_CHECK_EQUAL( zero.search_index<LAST_ZERO>(), 15);
-  BOOST_CHECK_EQUAL( P01.search_index<LAST_ZERO>(), 15);
-  BOOST_CHECK_EQUAL( PPa.search_index<LAST_ZERO>(), 4);
-  BOOST_CHECK_EQUAL( P1.search_index<LAST_ZERO>(), 16);
-  BOOST_CHECK_EQUAL( P01.search_index<LAST_ZERO>(1), 0);
-  BOOST_CHECK_EQUAL( P10.search_index<LAST_ZERO>(1), 16);
-  BOOST_CHECK_EQUAL( PPa.search_index<LAST_ZERO>(5), 4);
-  BOOST_CHECK_EQUAL( PPa.search_index<LAST_ZERO>(3), 16);
+  BOOST_CHECK_EQUAL( zero.last_zero(), 15);
+  BOOST_CHECK_EQUAL( P01.last_zero(), 15);
+  BOOST_CHECK_EQUAL( PPa.last_zero(), 4);
+  BOOST_CHECK_EQUAL( P1.last_zero(), 16);
+  BOOST_CHECK_EQUAL( P01.last_zero(1), 0);
+  BOOST_CHECK_EQUAL( P10.last_zero(1), 16);
+  BOOST_CHECK_EQUAL( PPa.last_zero(5), 4);
+  BOOST_CHECK_EQUAL( PPa.last_zero(3), 16);
 }
 
-BOOST_AUTO_TEST_CASE( search_first_non_zero_test )
+BOOST_AUTO_TEST_CASE( first_non_zero_test )
 {
-  BOOST_CHECK_EQUAL( zero.search_index<FIRST_NON_ZERO>(), 16);
-  BOOST_CHECK_EQUAL( P01.search_index<FIRST_NON_ZERO>(), 1);
-  BOOST_CHECK_EQUAL( PPa.search_index<FIRST_NON_ZERO>(), 0);
-  BOOST_CHECK_EQUAL( P01.search_index<FIRST_NON_ZERO>(), 1);
-  BOOST_CHECK_EQUAL( P01.search_index<FIRST_NON_ZERO>(1), 16);
-  BOOST_CHECK_EQUAL( PPa.search_index<FIRST_NON_ZERO>(5), 0);
-  BOOST_CHECK_EQUAL( PPa.search_index<FIRST_NON_ZERO>(3), 0);
+  BOOST_CHECK_EQUAL( zero.first_non_zero(), 16);
+  BOOST_CHECK_EQUAL( P01.first_non_zero(), 1);
+  BOOST_CHECK_EQUAL( PPa.first_non_zero(), 0);
+  BOOST_CHECK_EQUAL( P01.first_non_zero(), 1);
+  BOOST_CHECK_EQUAL( P01.first_non_zero(1), 16);
+  BOOST_CHECK_EQUAL( PPa.first_non_zero(5), 0);
+  BOOST_CHECK_EQUAL( PPa.first_non_zero(3), 0);
 }
 
-BOOST_AUTO_TEST_CASE( search_last_non_zero_test )
+BOOST_AUTO_TEST_CASE( last_non_zero_test )
 {
-  BOOST_CHECK_EQUAL( zero.search_index<LAST_NON_ZERO>(), 16);
-  BOOST_CHECK_EQUAL( P01.search_index<LAST_NON_ZERO>(), 1);
-  BOOST_CHECK_EQUAL( PPa.search_index<LAST_NON_ZERO>(), 15);
-  BOOST_CHECK_EQUAL( P01.search_index<LAST_NON_ZERO>(), 1);
-  BOOST_CHECK_EQUAL( P01.search_index<LAST_NON_ZERO>(1), 16);
-  BOOST_CHECK_EQUAL( PPa.search_index<LAST_NON_ZERO>(5), 3);
-  BOOST_CHECK_EQUAL( PPa.search_index<LAST_NON_ZERO>(3), 2);
+  BOOST_CHECK_EQUAL( zero.last_non_zero(), 16);
+  BOOST_CHECK_EQUAL( P01.last_non_zero(), 1);
+  BOOST_CHECK_EQUAL( PPa.last_non_zero(), 15);
+  BOOST_CHECK_EQUAL( P01.last_non_zero(), 1);
+  BOOST_CHECK_EQUAL( P01.last_non_zero(1), 16);
+  BOOST_CHECK_EQUAL( PPa.last_non_zero(5), 3);
+  BOOST_CHECK_EQUAL( PPa.last_non_zero(3), 2);
 }
 
 BOOST_AUTO_TEST_CASE( permuted_test )

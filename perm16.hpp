@@ -31,25 +31,27 @@ struct alignas(16) Vect16
     epi8 v8;
   };
 
+  static const constexpr size_t N = 16;
+
   uint8_t operator[](uint64_t i) const { return p[i]; }
   uint8_t &operator[](uint64_t i) { return p[i]; }
 
-  inline uint64_t first_diff(const Vect16 &b) const {
-    return _mm_cmpestri (v, 16, b.v, 16, FIRST_DIFF);
+  uint64_t first_diff(const Vect16 &b, size_t bound = N) const {
+    return _mm_cmpestri (v, bound, b.v, bound, FIRST_DIFF);
   }
 
-  inline bool operator==(const Vect16 &b) const {
-    return first_diff(b) == 16;
+  bool operator==(const Vect16 &b) const {
+    return first_diff(b) == N;
   }
 
-  inline bool operator < (const Vect16 &b) const {
+  bool operator < (const Vect16 &b) const {
     uint64_t diff = first_diff(b);
-    return (diff != 16) and p[diff] < b.p[diff];
+    return (diff != N) and p[diff] < b.p[diff];
   }
 
   char less_partial(const Vect16 &b, int k) const {
-    uint64_t diff = _mm_cmpestri (v, k, b.v, k, FIRST_DIFF);
-    return (diff == 16) ? 0 : char(p[diff]) - char(b.p[diff]);
+    uint64_t diff = first_diff(b, k);
+    return (diff == N) ? 0 : char(p[diff]) - char(b.p[diff]);
   }
 
 
@@ -60,23 +62,23 @@ struct alignas(16) Vect16
   };
 
   template <char IDX_MODE>
-  uint64_t search_index(int bound = 16) const {
+  uint64_t search_index(int bound = N) const {
     const __m128i zero {0, 0};
     return _mm_cmpestri(zero, 1, v, bound, IDX_MODE);
   }
 
-  uint64_t last_non_zero(int bound=16) const { return search_index<LAST_NON_ZERO>(bound); }
-  uint64_t first_non_zero(int bound=16) const { return search_index<FIRST_NON_ZERO>(bound); }
-  uint64_t last_zero(int bound=16) const { return search_index<LAST_ZERO>(bound); }
-  uint64_t first_zero(int bound=16) const { return search_index<FIRST_ZERO>(bound); }
+  uint64_t last_non_zero(int bound=N) const { return search_index<LAST_NON_ZERO>(bound); }
+  uint64_t first_non_zero(int bound=N) const { return search_index<FIRST_NON_ZERO>(bound); }
+  uint64_t last_zero(int bound=N) const { return search_index<LAST_ZERO>(bound); }
+  uint64_t first_zero(int bound=N) const { return search_index<FIRST_ZERO>(bound); }
 
-  bool is_permutation(const size_t N = 16) const {
+  bool is_permutation(const size_t k = N) const {
     constexpr const __m128i idv = __m128i(epi8 {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15});
-    uint64_t diff = _mm_cmpestri(v, 16, idv, 16, LAST_DIFF);
+    uint64_t diff = _mm_cmpestri(v, N, idv, N, LAST_DIFF);
     return
-      _mm_cmpestri(idv, 16, v, 16, FIRST_NON_ZERO) == 16 and // all(x in idv for x in v)
-      _mm_cmpestri(v, 16, idv, 16, FIRST_NON_ZERO) == 16 and // all(x in v for x in idv)
-      (diff == 16 or diff < N);     // v = idv    or    last diff index < N
+      _mm_cmpestri(idv, N, v, N, FIRST_NON_ZERO) == N and // all(x in idv for x in v)
+      _mm_cmpestri(v, N, idv, N, FIRST_NON_ZERO) == N and // all(x in v for x in idv)
+      (diff == N or diff < k);     // v = idv    or    last diff index < N
   }
 
 };
@@ -90,7 +92,7 @@ namespace std {
       return ar.v[1] ^ ar.v[0];
     #else
       size_t h = 0;
-      for (int i=0; i<16; i++) h = hash<uint8_t>()(ar[i]) + (h << 6) + (h << 16) - h;
+      for (int i=0; i<Vect16::N; i++) h = hash<uint8_t>()(ar[i]) + (h << 6) + (h << 16) - h;
       return h;
     #endif
     }
@@ -120,19 +122,19 @@ struct Perm16 : public Vect16 {
   Perm16(std::initializer_list<uint8_t> il) {
     uint64_t i=0;
     for (auto x : il) { v8[i++] = x; }
-    assert (i <= 16);
-    for (/**/; i<16; i++) v8[i] = i;
+    assert (i <= vect::N);
+    for (/**/; i<vect::N; i++) v8[i] = i;
   }
 
   Perm16 operator*(const Perm16&p) const { return permuted(p); }
   static Perm16 one() { return {}; }
   static Perm16 elementary_transposition(uint64_t i) {
-    assert (i < 16);
+    assert (i < vect::N);
     Perm16 res {}; res[i]=i+1; res[i+1]=i; return res; }
 
 private:
 
-  Perm16(const vect v) : Vect16(v) {};
+  Perm16(const vect v) : vect(v) {};
 
 };
 
