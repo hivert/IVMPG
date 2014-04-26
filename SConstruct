@@ -129,8 +129,9 @@ perm16mod = sage_env.SharedLibrary(source = perm16mod, SHLIBPREFIX='')
 ######################################################################################
 
 perm16_o = env.Object('perm16.cpp')
-group_test  = test_env.Program(['group16_test.cpp', perm16_o])
 perm_test = test_env.Program(['perm_test.cpp', perm16_o])
+group_test  = test_env.Program(['group_test.cpp', perm16_o])
+group16_test  = test_env.Program(['group16_test.cpp', perm16_o])
 
 group_time  = test_env.Program('timing.cpp')
 group_gen_time  = test_env.Program('timing_generic.cpp')
@@ -158,6 +159,7 @@ checktestmod = test_env.Alias('checktestmod', ['testmod.py', perm16mod], sage_te
 test_env.Alias('check', [checkperm16mod, checktestmod])
 test_env.Alias('check', [perm_test], perm_test[0].abspath)
 test_env.Alias('check', [group_test], group_test[0].abspath)
+test_env.Alias('check', [group16_test], group16_test[0].abspath)
 
 ######################################################################################
 

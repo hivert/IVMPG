@@ -20,35 +20,6 @@ struct Fixture {
 
 BOOST_FIXTURE_TEST_SUITE( group16_test, Fixture )
 
-BOOST_AUTO_TEST_CASE( check_sgs_test )
-{
-  BOOST_CHECK(S3.check_sgs());
-  BOOST_CHECK(g100.check_sgs());
-  BOOST_CHECK(g_Borie.check_sgs());
-}
-
-
-auto is_canon     = [](PermutationGroup<> g, Vect16 v) {return g.is_canonical(v);};
-auto is_not_canon = [](PermutationGroup<> g, Vect16 v) {return not g.is_canonical(v);};
-
-
-BOOST_AUTO_TEST_CASE( is_canonical_test )
-{
-  BOOST_CHECK_PREDICATE( is_canon, (S3)(Vect16({})) );
-  BOOST_CHECK_PREDICATE( is_canon, (S3)(Vect16({1,0})) );
-  BOOST_CHECK_PREDICATE( is_not_canon, (S3)(Vect16({0,1})) );
-  BOOST_CHECK_PREDICATE( is_not_canon, (S3)(Vect16({4,1,3})) );
-  BOOST_CHECK_PREDICATE( is_canon, (S3)(Vect16({4,3,3})) );
-}
-
-BOOST_AUTO_TEST_CASE( canonical_test )
-{
-  BOOST_CHECK_EQUAL( S3.canonical(Vect16({})),      Vect16({}) );
-  BOOST_CHECK_EQUAL( S3.canonical(Vect16({1,0})),   Vect16({1,0}) );
-  BOOST_CHECK_EQUAL( S3.canonical(Vect16({0,1})),   Vect16({1,0}) );
-  BOOST_CHECK_EQUAL( S3.canonical(Vect16({4,1,3})), Vect16({4,3,1}) );
-  BOOST_CHECK_EQUAL( S3.canonical(Vect16({4,3,3})), Vect16({4,3,3}) );
-}
 
 BOOST_AUTO_TEST_CASE( elements_of_depth_test )
 {
