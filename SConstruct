@@ -1,5 +1,5 @@
 import os
-import cpuAVX, cilk
+import cpuAVX, cilk, sagemath
 from SCons.Errors import StopError
 from SCons.Warnings import warn, Warning, enableWarningClass
 
@@ -27,6 +27,8 @@ env.Append(TBB_ROOT = os.environ.get('TBB_ROOT', 'yes'))
 vars.Add(PackageVariable('tbb', 'thread building block', '${TBB_ROOT}'))
 env.Append(CILK_ROOT = os.environ.get('CILK_ROOT', 'yes'))
 vars.Add(PackageVariable('cilk', 'cilk compiler installation', '${CILK_ROOT}'))
+env.Append(SAGE_ROOT = os.environ.get('SAGE_ROOT', 'yes'))
+vars.Add(PackageVariable('sage', 'SageMath installation', '${SAGE_ROOT}'))
 
 vars.Update(env)
 Help(vars.GenerateHelpText(env))
@@ -39,6 +41,7 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     conf = Configure(env, config_h = "config.h" )
     conf.AddTests(cpuAVX.Tests)
     conf.AddTests(cilk.Tests)
+    conf.AddTests(sagemath.Tests)
 
     if env['cilk'] and conf.CheckCilkPlusCompiler():
         conf.Define('USE_CILK', 1, 'Set to 1 if using Cilk compiler')
@@ -84,6 +87,12 @@ if not env.GetOption('clean') and not env.GetOption('help'):
             warn(ConfigureWarning, "Unable to find TBB ! "
                  "Please add 'tbb=<tbb_path> to the command line"
                  "\n                Falling back to default allocator\n")
+
+    if not conf.CheckSage():
+        warn(ConfigureWarning, "No Sage installation found ! "
+             "Please add 'sage=<sage_path> to the command line"
+             "Sage module will not be built !\n")
+
     env = conf.Finish()
 
 ######################################################################################
@@ -99,32 +108,29 @@ if not env.GetOption('clean') and not env.GetOption('help'):
 
 ######################################################################################
 
-env.Tool("cython")
+    if env['SAGE_ROOT'] is not None:
+        env.Tool("cython")
 
-import sage.env
+        SAGE_INC = os.path.join(env['SAGE_LOCAL'], 'include')
+        SAGE_INCLUDE_DIR = [SAGE_INC, os.path.join(SAGE_INC, 'csage'),
+                            env['SAGE_SRC'],
+                            os.path.join(env['SAGE_SRC'], 'sage', 'ext'),
+                            os.path.join(SAGE_INC, 'python2.7')]
+        SAGE_LIB = os.path.join(env['SAGE_LOCAL'], 'lib')
 
-# from SAGE_ROOT/src/setup.py:
+        perm16mod  = env.Cython('perm16mod.pyx',
+                                CYTHONLANG = 'c++',
+                                CYTHONFLAGS = ["-I"+env['SAGE_SRC']])
+        Depends(perm16mod, Split('perm16mod.pxd group16.pxd'))
 
-SAGE_INC = os.path.join(sage.env.SAGE_LOCAL,'include')
-SAGE_INCLUDE_DIR = [SAGE_INC, os.path.join(SAGE_INC, 'csage'),
-                    sage.env.SAGE_SRC,
-                    os.path.join(sage.env.SAGE_SRC, 'sage', 'ext'),
-                    os.path.join(SAGE_INC, 'python2.7')]
-SAGE_LIB = os.path.join(sage.env.SAGE_LOCAL, 'lib')
-
-perm16mod  = env.Cython('perm16mod.pyx',
-                        CYTHONLANG = 'c++',
-                        CYTHONFLAGS = ["-I"+sage.env.SAGE_SRC])
-Depends(perm16mod, Split('perm16mod.pxd group16.pxd'))
-
-sage_env = env.Clone()
-sage_env.Append(CPPFLAGS = '-fno-strict-aliasing',
-                CPPPATH = SAGE_INCLUDE_DIR,
-                LIBPATH = [SAGE_LIB],
-                LIBS    = ['csage'],
-                RPATH   = [SAGE_LIB]
-)
-perm16mod = sage_env.SharedLibrary(source = perm16mod, SHLIBPREFIX='')
+        sage_env = env.Clone()
+        sage_env.Append(CPPFLAGS = '-fno-strict-aliasing',
+                        CPPPATH = SAGE_INCLUDE_DIR,
+                        LIBPATH = [SAGE_LIB],
+                        LIBS    = ['csage'],
+                        RPATH   = [SAGE_LIB]
+        )
+        perm16mod = sage_env.SharedLibrary(source = perm16mod, SHLIBPREFIX='')
 
 ######################################################################################
 
@@ -138,25 +144,26 @@ group_gen_time  = test_env.Program('timing_generic.cpp')
 
 ######################################################################################
 
+if not env.GetOption('clean') and not env.GetOption('help') and env['SAGE_ROOT'] is not None:
+    def sage_test(env,target,source):
+        import subprocess
+        try:
+            result = subprocess.call(
+                [os.path.join(env['SAGE_ROOT'], 'sage'), '-t'] +
+                env['SAGE_TESTS_OPTS'] +
+                [source[0].abspath])
+        except Exception,e:
+            return "Unable to call Sage: %s"%(str(e))
+        else:
+            return result
 
-def sage_test(env,target,source):
-    import subprocess
-    try:
-        result = subprocess.call(
-            [os.path.join(sage.env.SAGE_ROOT, 'sage'), '-t'] +
-            env['SAGE_TESTS_OPTS'] +
-            [source[0].abspath])
-    except Exception,e:
-        return "Unable to call Sage: %s"%(str(e))
-    else:
-        return result
+    test_env.AlwaysBuild(Alias('check'), Alias('checkperm16mod'), Alias('checktestmod'))
+    checkperm16mod = test_env.Alias('checkperm16mod', ['perm16mod.pyx', perm16mod],
+                              sage_test, SAGE_TESTS_OPTS=['--force-lib'])
 
-test_env.AlwaysBuild(Alias('check'), Alias('checkperm16mod'), Alias('checktestmod'))
-checkperm16mod = test_env.Alias('checkperm16mod', ['perm16mod.pyx', perm16mod],
-                          sage_test, SAGE_TESTS_OPTS=['--force-lib'])
+    checktestmod = test_env.Alias('checktestmod', ['testmod.py', perm16mod], sage_test)
+    test_env.Alias('check', [checkperm16mod, checktestmod])
 
-checktestmod = test_env.Alias('checktestmod', ['testmod.py', perm16mod], sage_test)
-test_env.Alias('check', [checkperm16mod, checktestmod])
 test_env.Alias('check', [perm_test], perm_test[0].abspath)
 test_env.Alias('check', [group_test], group_test[0].abspath)
 test_env.Alias('check', [group16_test], group16_test[0].abspath)
@@ -174,4 +181,5 @@ env.Clean("distclean", [ Split(".sconsign.dblite .sconf_temp config.h config.log
                          Glob(os.path.join("site_scons", "site_tools", "*.pyc")),
                      ])
 
-env.Default(perm16mod)
+if not env.GetOption('clean') and not env.GetOption('help') and env['SAGE_ROOT'] is not None:
+    env.Default(perm16mod)
