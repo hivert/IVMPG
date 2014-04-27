@@ -155,21 +155,20 @@ bool PermutationGroup<perm>::check_sgs() const {
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v) const {
   set<vect> to_analyse, new_to_analyse;
-  vect child;
-
+ 
   to_analyse.insert(v);
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
     auto &transversal = sgs[i];
     // CILK bugs with range for
-    //    for (vect list_test : to_analyse) {
+    //    for (vect &list_test : to_analyse) {
     for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
-      vect list_test = *itl;
+      const vect &list_test = *itl;
       // CILK bugs with range for
-      // for (vect x : transversal) {
+      // for (perm &x : transversal) {
       for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
-	vect x = *itv;
-        child = list_test.permuted(x);
+        const perm &x = *itv;
+        const vect child = list_test.permuted(x);
 	// Slight change from Borie's algorithm's: we do a full lex comparison first.
 	if (v < child) return false;
         if (v.first_diff(child) > i) new_to_analyse.insert(child);
@@ -184,17 +183,16 @@ bool PermutationGroup<perm>::is_canonical(vect v) const {
 template<class perm>
 auto PermutationGroup<perm>::canonical(vect v) const -> vect {
   set<vect> to_analyse, new_to_analyse;
-  vect child;
 
   to_analyse.insert(v);
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
     auto &transversal = sgs[i];
     for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
-      vect list_test = *itl;
+      const vect &list_test = *itl;
       for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
-	vect x = *itv;
-        child = list_test.permuted(x);
+        const vect &x = *itv;
+        const vect child = list_test.permuted(x);
 	// TODO: find a better algorithm !
 	// TODO: the following doesn't work:
 	//       if (v.less_partial(child, i+1) < 0) v = child;

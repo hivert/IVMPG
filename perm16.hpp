@@ -46,12 +46,12 @@ struct alignas(16) Vect16
 
   bool operator < (const Vect16 &b) const {
     uint64_t diff = first_diff(b);
-    return (diff != N) and p[diff] < b.p[diff];
+    return (diff != N) and p[diff] < b[diff];
   }
 
   char less_partial(const Vect16 &b, int k) const {
     uint64_t diff = first_diff(b, k);
-    return (diff == N) ? 0 : char(p[diff]) - char(b.p[diff]);
+    return (diff == N) ? 0 : char(p[diff]) - char(b[diff]);
   }
 
 
@@ -62,7 +62,7 @@ struct alignas(16) Vect16
   };
 
   template <char IDX_MODE>
-  uint64_t search_index(int bound = N) const {
+  uint64_t search_index(int bound) const {
     const __m128i zero {0, 0};
     return _mm_cmpestri(zero, 1, v, bound, IDX_MODE);
   }
@@ -120,12 +120,10 @@ struct Perm16 : public Vect16 {
 
   Perm16() : Vect16({0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}) {};
   Perm16(std::initializer_list<uint8_t> il) {
-    uint64_t i=0;
-    for (auto x : il) { v8[i++] = x; }
-    assert (i <= vect::N);
-    for (/**/; i<vect::N; i++) v8[i] = i;
+    assert (il.size() <= vect::N);
+    std::copy(il.begin(), il.end(), this->p.begin());
+    for (uint64_t i = il.size(); i<vect::N; i++) this->p[i] = i;
   }
-
   Perm16 operator*(const Perm16&p) const { return permuted(p); }
   static Perm16 one() { return {}; }
   static Perm16 elementary_transposition(uint64_t i) {
@@ -139,7 +137,7 @@ private:
 };
 
 static_assert(sizeof(Vect16) == sizeof(Perm16),
-	      "Vect16 ans Perm16 have a different memory layout !");
+	      "Vect16 and Perm16 have a different memory layout !");
 
 #endif
 
