@@ -1,3 +1,5 @@
+Fast version:
+=============
 Counting: 
 N. Borie's favorite ( 15 ) : 6686 (time = 0.013848s).
 N. Borie's favorite ( 20 ) : 57605 (time = 0.103515s).
@@ -8,4 +10,30 @@ N. Borie's favorite ( 15 ) : 6686 (time = 0.012717s).
 N. Borie's favorite ( 20 ) : 57605 (time = 0.106612s).
 N. Borie's favorite ( 25 ) : 375810 (time = 0.687308s).
 N. Borie's favorite ( 30 ) : 1983238 (time = 3.59769s).
+
+Not using shuffle:
+==================
+Counting:
+N. Borie's favorite ( 15 ) : 6686 (time = 0.024438s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.1933s).
+N. Borie's favorite ( 25 ) : 375810 (time = 1.27312s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 6.78966s).
+Listing:
+N. Borie's favorite ( 15 ) : 6686 (time = 0.023121s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.195119s).
+N. Borie's favorite ( 25 ) : 375810 (time = 1.32617s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 6.8992s).
+
+Generic version:
+================
+Counting:
+N. Borie's favorite ( 15 ) : 6686 (time = 0.04021s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.318833s).
+N. Borie's favorite ( 25 ) : 375810 (time = 2.12292s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 11.3066s).
+Listing:
+N. Borie's favorite ( 15 ) : 6686 (time = 0.037185s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.321539s).
+N. Borie's favorite ( 25 ) : 375810 (time = 2.13978s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 11.4224s).
 

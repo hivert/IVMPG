@@ -12,8 +12,7 @@ template < size_t _N, typename Expo=uint8_t >
 struct VectGeneric {
 
   static const constexpr size_t N = _N;
-  using type = std::array<Expo, N>;
-  type p;
+  std::array<Expo, N> p;
 
   Expo operator[](uint64_t i) const { return p[i]; }
   Expo &operator[](uint64_t i) { return p[i]; }
@@ -61,7 +60,7 @@ struct VectGeneric {
   }
 
   bool is_permutation(const size_t k = N) const {
-    type temp = this->p;
+    auto temp = this->p;
     std::sort(temp.begin(), temp.end());
     for (uint64_t i=0; i<N; i++) if (temp[i] != i) return false;
     for (uint64_t i=k; i<N; i++) if (p[i] != i) return false;
