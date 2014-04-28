@@ -21,16 +21,22 @@ Type: 'scons [options] program' to build the production program,
 env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-g', '-DNDEBUG',
                             '-Wall', '-Wno-missing-braces', '-Wno-unused-variable'])
 
-vars = Variables()
-
+cache_file = 'config.cache'
+vars = Variables(cache_file)
 env.Append(TBB_ROOT = os.environ.get('TBB_ROOT', 'yes'))
 vars.Add(PackageVariable('tbb', 'thread building block', '${TBB_ROOT}'))
 env.Append(CILK_ROOT = os.environ.get('CILK_ROOT', 'yes'))
 vars.Add(PackageVariable('cilk', 'cilk compiler installation', '${CILK_ROOT}'))
 env.Append(SAGE_ROOT = os.environ.get('SAGE_ROOT', 'yes'))
 vars.Add(PackageVariable('sage', 'SageMath installation', '${SAGE_ROOT}'))
-
+vars.Add('SAGE_ROOT', 'Sage installation path', None)
+vars.Add('SAGECMD', 'Sage command', None)
+vars.Add('SAGE_LOCAL', 'Sage installation path', None)
+vars.Add('SAGE_SRC',   'Sage installation path', None)
+vars.Add('SAGE_LIB',   'Sage installation path', None)
 vars.Update(env)
+
+
 Help(vars.GenerateHelpText(env))
 
 ######################################################################################
@@ -183,3 +189,5 @@ env.Clean("distclean", [ Split(".sconsign.dblite .sconf_temp config.h config.log
 
 if not env.GetOption('clean') and not env.GetOption('help') and env['SAGE_ROOT'] is not None:
     env.Default(perm16mod)
+
+vars.Save(cache_file, env)
