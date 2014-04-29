@@ -42,19 +42,19 @@ struct VectGeneric {
     return res;
   };
 
-  uint64_t first_non_zero(int bound=N) const {
+  uint64_t first_non_zero(size_t bound=N) const {
     for (uint64_t i=0; i<bound; i++) if (p[i] != 0) return i;
     return N;
   }
-  uint64_t first_zero(int bound=N) const {
+  uint64_t first_zero(size_t  bound=N) const {
     for (uint64_t i=0; i<bound; i++) if (p[i] == 0) return i;
     return N;
   }
-  uint64_t last_non_zero(int bound=16) const {
+  uint64_t last_non_zero(size_t  bound=16) const {
     for (int64_t i=bound-1; i >= 0; i--) if (p[i] != 0) return i;
     return N;
   }
-  uint64_t last_zero(int bound=16) const {
+  uint64_t last_zero(size_t  bound=16) const {
     for (int64_t i=bound-1; i >= 0; i--) if (p[i] == 0) return i;
     return N;
   }
