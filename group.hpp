@@ -17,16 +17,6 @@
   using allocator = std::allocator<T>;
 #endif
 
-#ifdef USE_CILK
-  #include <cilk/cilk.h>
-  #include <cilk/cilk_api.h>
-  #include <cilk/reducer_list.h>
-  #include <cilk/reducer_opadd.h>
-  #include <cilk/holder.h>
-#else
-  #define cilk_spawn
-#endif
-
 //template<class T>
 //using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator>;
 
@@ -38,6 +28,16 @@
   #include <set>
   template<class T>
   using set = std::set< T, std::less<T>, allocator<T> >;
+#endif
+
+#ifdef USE_CILK
+  #include <cilk/cilk.h>
+  #include <cilk/cilk_api.h>
+  #include <cilk/reducer_list.h>
+  #include <cilk/reducer_opadd.h>
+  #include <cilk/holder.h>
+#else
+  #define cilk_spawn
 #endif
 
 #ifdef USE_CILK
@@ -62,7 +62,7 @@ struct BFS_storage {
 template< class perm  = Perm16 >
 class PermutationGroup {
 
-  class ChildrenIterator;
+  class Children;
 
 public:
 
@@ -92,20 +92,30 @@ public:
   // };
   typename Res::type_result elements_of_depth_walk(uint64_t depth) const;
 
-  ChildrenIterator children(const vect &v) const { return {*this, v}; }
+  Children children(const vect &v) const { return {*this, v}; }
 
 private:
 
-  class ChildrenIterator {
+  class Children {
+
+    class Iterator {
+      const Children &ch;
+      uint64_t ind;
+    public:
+      Iterator(const Children &ch) : ch(ch), ind(ch.father.last_non_zero(ch.gr.N)) {
+	if (ind >= ch.gr.N) ind = 0; }
+      Iterator(const Children &ch, uint64_t end) : ch(ch), ind(end) {}
+      void operator++() { ++ind; }
+      bool operator!=(const Iterator &end) const {return ind != end.ind;}
+      vect operator *() const { vect res = ch.father; ++res.p[ind]; return res; }
+    };
+
     const PermutationGroup &gr;
     const vect &father;
-    uint64_t ind;
   public:
-    ChildrenIterator(const PermutationGroup &gr, const vect &v) :
-      gr(gr), father(v), ind(father.last_non_zero(gr.N)) { if (ind >= gr.N) ind = 0; };
-    void operator++() { ++ind; }
-    bool is_not_end() const { return ind < gr.N; }
-    vect operator *() const { vect res = father; ++res.p[ind]; return res; }
+    Children(const PermutationGroup &gr, const vect &v) : gr(gr), father(v) {};
+    Iterator begin() const { return {*this}; }
+    Iterator end() const { return {*this, gr.N}; }
   };
 
 #ifdef USE_CILK
@@ -160,10 +170,7 @@ std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g
 template<class perm>
 bool PermutationGroup<perm>::check_sgs() const {
   for (uint64_t level = 0; level<sgs.size(); level++)
-    // CILK bugs with range for
     for (const perm &v : sgs[level]) {
-      //for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
-      //auto v = *ip;
       if (not v.is_permutation(N)) return false;
       for (uint64_t i=0; i<level; i++)
 	if (not (v[i] == i)) return false;
@@ -183,15 +190,9 @@ bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage<vect> &store) cons
 
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
-    auto &transversal = sgs[i];
-    // CILK bugs with range for
-    for (vect &list_test : to_analyse) {
-      //for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
-      //const vect &list_test = *itl;
-      // CILK bugs with range for
+    const auto &transversal = sgs[i];
+    for (const vect &list_test : to_analyse) {
       for (const perm &x : transversal) {
-	//for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
-        //const perm &x = *itv;
         const vect child = list_test.permuted(x);
 	// Slight change from Borie's algorithm's: we do a full lex comparison first.
 	if (v < child) return false;
@@ -219,13 +220,9 @@ auto PermutationGroup<perm>::canonical(vect v, BFS_storage<vect> &store) const -
 
   for (uint64_t i=0; i < N-1; i++) {
     new_to_analyse.clear();
-    auto &transversal = sgs[i];
-    for (vect &list_test : to_analyse) {
-      //    for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
-      //const vect &list_test = *itl;
+    const auto &transversal = sgs[i];
+    for (const vect &list_test : to_analyse) {
       for (const perm &x : transversal) {
-	//      for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
-        //        const vect &x = *itv;
         const vect child = list_test.permuted(x);
 	// TODO: find a better algorithm !
 	// TODO: the following doesn't work:
@@ -250,11 +247,9 @@ template<class perm>
 template<class Res>
 void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
 				       uint64_t target_depth, uint64_t depth,
-				       BFS_storage<vect> &store) const
-{
+				       BFS_storage<vect> &store) const {
   if (depth == target_depth) Res::update(res, v);
-  else for (auto ch = children(v); ch.is_not_end(); ++ch) {
-      vect child = *ch;
+  else for (vect child : children(v)) {
       if (is_canonical(child, store))
 	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1, store);
     }
