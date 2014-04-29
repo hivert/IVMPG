@@ -22,6 +22,7 @@
   #include <cilk/cilk_api.h>
   #include <cilk/reducer_list.h>
   #include <cilk/reducer_opadd.h>
+  #include <cilk/holder.h>
 #else
   #define cilk_spawn
 #endif
@@ -39,11 +40,23 @@
   using set = std::set< T, std::less<T>, allocator<T> >;
 #endif
 
+#ifdef USE_CILK
 template <class vect>
 struct BFS_storage {
-  set<vect> to_analyse, new_to_analyse;
-};
+  cilk::holder< set<vect> > analyse, new_analyse;
 
+  set<vect> &get_to_analyse() { return analyse(); }
+  set<vect> &get_new_to_analyse() { return new_analyse(); }
+};
+#else
+template <class vect>
+struct BFS_storage {
+  set<vect> analyse, new_analyse;
+
+  set<vect> &get_to_analyse() { return analyse; }
+  set<vect> &get_new_to_analyse() { return new_analyse; }
+};
+#endif
 
 #include "perm16.hpp"
 template< class perm  = Perm16 >
@@ -64,7 +77,9 @@ public:
   PermutationGroup(std::string name, uint64_t N, StrongGeneratingSet sgs) :
     name(name), N(N), sgs(sgs) { assert(check_sgs()); };
   bool check_sgs() const;
+  bool is_canonical(vect v) const;
   bool is_canonical(vect v, BFS_storage<vect> &store) const;
+  vect canonical(vect v) const;
   vect canonical(vect v, BFS_storage<vect> &store) const;
   list elements_of_depth(uint64_t depth) const;
   uint64_t elements_of_depth_number(uint64_t depth) const;
@@ -146,9 +161,9 @@ template<class perm>
 bool PermutationGroup<perm>::check_sgs() const {
   for (uint64_t level = 0; level<sgs.size(); level++)
     // CILK bugs with range for
-    //for (auto &v : sgs[level]) {
-    for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
-      auto v = *ip;
+    for (const perm &v : sgs[level]) {
+      //for (auto ip = sgs[level].begin(); ip!=sgs[level].end(); ip++) {
+      //auto v = *ip;
       if (not v.is_permutation(N)) return false;
       for (uint64_t i=0; i<level; i++)
 	if (not (v[i] == i)) return false;
@@ -160,58 +175,75 @@ bool PermutationGroup<perm>::check_sgs() const {
 
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage<vect> &store) const {
-  store.to_analyse.clear();
-  store.new_to_analyse.clear();
-  store.to_analyse.insert(v);
+  set<vect> &to_analyse = store.get_to_analyse();
+  set<vect> &new_to_analyse = store.get_new_to_analyse();
+  to_analyse.clear();
+  new_to_analyse.clear();
+  to_analyse.insert(v);
 
   for (uint64_t i=0; i < N-1; i++) {
-    store.new_to_analyse.clear();
+    new_to_analyse.clear();
     auto &transversal = sgs[i];
     // CILK bugs with range for
-    //    for (vect &list_test : to_analyse) {
-    for (auto itl = store.to_analyse.begin(); itl != store.to_analyse.end(); itl++) {
-      const vect &list_test = *itl;
+    for (vect &list_test : to_analyse) {
+      //for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
+      //const vect &list_test = *itl;
       // CILK bugs with range for
-      // for (perm &x : transversal) {
-      for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
-        const perm &x = *itv;
+      for (const perm &x : transversal) {
+	//for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
+        //const perm &x = *itv;
         const vect child = list_test.permuted(x);
 	// Slight change from Borie's algorithm's: we do a full lex comparison first.
 	if (v < child) return false;
-        if (v.first_diff(child) > i) store.new_to_analyse.insert(child);
+        if (v.first_diff(child) > i) new_to_analyse.insert(child);
       }
     }
-    store.to_analyse.swap(store.new_to_analyse);
+    to_analyse.swap(new_to_analyse);
   }
   return true;
 }
 
+template<class perm>
+bool PermutationGroup<perm>::is_canonical(vect v) const {
+  BFS_storage<vect> store {};
+  return is_canonical(v, store);
+}
 
 template<class perm>
 auto PermutationGroup<perm>::canonical(vect v, BFS_storage<vect> &store) const -> vect {
-  store.to_analyse.clear();
-  store.new_to_analyse.clear();
-  store.to_analyse.insert(v);
+  set<vect> &to_analyse = store.get_to_analyse();
+  set<vect> &new_to_analyse = store.get_new_to_analyse();
+  to_analyse.clear();
+  new_to_analyse.clear();
+  to_analyse.insert(v);
 
   for (uint64_t i=0; i < N-1; i++) {
-    store.new_to_analyse.clear();
+    new_to_analyse.clear();
     auto &transversal = sgs[i];
-    for (auto itl = store.to_analyse.begin(); itl != store.to_analyse.end(); itl++) {
-      const vect &list_test = *itl;
-      for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
-        const vect &x = *itv;
+    for (vect &list_test : to_analyse) {
+      //    for (auto itl = to_analyse.begin(); itl != to_analyse.end(); itl++) {
+      //const vect &list_test = *itl;
+      for (const perm &x : transversal) {
+	//      for (auto itv = transversal.begin(); itv != transversal.end(); itv++) {
+        //        const vect &x = *itv;
         const vect child = list_test.permuted(x);
 	// TODO: find a better algorithm !
 	// TODO: the following doesn't work:
 	//       if (v.less_partial(child, i+1) < 0) v = child;
 	//       if (v < child) v = child;
-	if (v < child) return canonical(child);
-	else if (v.first_diff(child) > i) store.new_to_analyse.insert(child);
+	if (v < child) return canonical(child, store);
+	else if (v.first_diff(child) > i) new_to_analyse.insert(child);
       }
     }
-    store.to_analyse.swap(store.new_to_analyse);
+    to_analyse.swap(new_to_analyse);
   }
   return v;
+}
+
+template<class perm>
+auto PermutationGroup<perm>::canonical(vect v) const -> vect {
+  BFS_storage<vect> store {};
+  return canonical(v, store);
 }
 
 template<class perm>
