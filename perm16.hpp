@@ -43,6 +43,9 @@ struct alignas(16) Vect16
   bool operator==(const Vect16 &b) const {
     return first_diff(b) == N;
   }
+  bool operator!=(const Vect16 &b) const {
+    return first_diff(b) != N;
+  }
 
   bool operator < (const Vect16 &b) const {
     uint64_t diff = first_diff(b);

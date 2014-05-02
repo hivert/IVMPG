@@ -232,7 +232,7 @@ auto PermutationGroup<perm>::canonical(vect v, BFS_storage<vect> &store) const -
 	else if (v.first_diff(child) > i) new_to_analyse.insert(child);
       }
     }
-    to_analyse.swap(new_to_analyse);
+    std::swap(to_analyse, new_to_analyse);
   }
   return v;
 }
