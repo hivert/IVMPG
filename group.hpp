@@ -5,7 +5,6 @@
 #include <vector>
 #include <list>
 #include <string>
-
 #include "config.h"
 
 #ifdef USE_TBB
@@ -19,16 +18,20 @@
 
 //template<class T>
 //using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator>;
+#include "container/bounded_set.hpp"
 
-#ifdef USE_BOOST_FLAT_SET
-  #include <boost/container/flat_set.hpp>
-  template<class T>
-  using set = boost::container::flat_set< T, std::less<T>, allocator<T> >;
-#else
-  #include <set>
-  template<class T>
-  using set = std::set< T, std::less<T>, allocator<T> >;
-#endif
+// #ifdef USE_BOOST_FLAT_SET
+//   #include <boost/container/flat_set.hpp>
+//   template<class T>
+//   using set = boost::container::flat_set< T, std::less<T>, allocator<T> >;
+// #else
+//   #include <set>
+//   template<class T>
+//   using set = std::set< T, std::less<T>, allocator<T> >;
+// #endif
+
+template<class T>
+using set = bounded_set< T >;
 
 #ifdef USE_CILK
   #include <cilk/cilk.h>
@@ -40,10 +43,13 @@
   #define cilk_spawn
 #endif
 
+#include "perm16.hpp"
+
+
 #ifdef USE_CILK
 template <class vect>
 struct BFS_storage {
-  cilk::holder< set<vect> > analyse, new_analyse;
+cilk::holder< set<vect> > analyse, new_analyse;
 
   set<vect> &get_to_analyse() { return analyse(); }
   set<vect> &get_new_to_analyse() { return new_analyse(); }
@@ -58,7 +64,6 @@ struct BFS_storage {
 };
 #endif
 
-#include "perm16.hpp"
 template< class perm  = Perm16 >
 class PermutationGroup {
 
@@ -182,8 +187,8 @@ bool PermutationGroup<perm>::check_sgs() const {
 
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage<vect> &store) const {
-  set<vect> &to_analyse = store.get_to_analyse();
-  set<vect> &new_to_analyse = store.get_new_to_analyse();
+  auto &to_analyse = store.get_to_analyse();
+  auto &new_to_analyse = store.get_new_to_analyse();
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
@@ -199,7 +204,7 @@ bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage<vect> &store) cons
         if (v.first_diff(child) > i) new_to_analyse.insert(child);
       }
     }
-    to_analyse.swap(new_to_analyse);
+    std::swap(to_analyse, new_to_analyse);
   }
   return true;
 }
@@ -212,8 +217,8 @@ bool PermutationGroup<perm>::is_canonical(vect v) const {
 
 template<class perm>
 auto PermutationGroup<perm>::canonical(vect v, BFS_storage<vect> &store) const -> vect {
-  set<vect> &to_analyse = store.get_to_analyse();
-  set<vect> &new_to_analyse = store.get_new_to_analyse();
+  auto &to_analyse = store.get_to_analyse();
+  auto &new_to_analyse = store.get_new_to_analyse();
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
