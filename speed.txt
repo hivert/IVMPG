@@ -1,3 +1,16 @@
+New Version (after using storage for BFS)
+=========================================
+Counting: 
+N. Borie's favorite ( 15 ) : 6686 (time = 0.012571s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.0811749s).
+N. Borie's favorite ( 25 ) : 375810 (time = 0.503672s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 2.6663s).
+Listing: 
+N. Borie's favorite ( 15 ) : 6686 (time = 0.0109649s).
+N. Borie's favorite ( 20 ) : 57605 (time = 0.0792823s).
+N. Borie's favorite ( 25 ) : 375810 (time = 0.538179s).
+N. Borie's favorite ( 30 ) : 1983238 (time = 2.73969s).
+
 Fast version:
 =============
 Counting: 
