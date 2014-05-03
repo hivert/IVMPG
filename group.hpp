@@ -81,6 +81,7 @@ public:
   vect ith_child(vect v, uint64_t i) const { v.p[i]++; return v; }
 
 #ifdef USE_CILK
+#define CILK_GET_VALUE(v) (v).get_value()
   using counter = cilk::reducer_opadd< uint64_t >;
   using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
   class BFS_storage {
@@ -90,6 +91,7 @@ public:
     set<vect> &get_new_to_analyse() { return new_analyse(); }
   };
 #else
+#define CILK_GET_VALUE(v) (v)
   using counter = uint64_t;
   using list_generator = std::list< vect, allocator<vect> >;
   class BFS_storage {
@@ -104,26 +106,14 @@ public:
     using type = list_generator;
     using type_result = list;
     static void update(type &lst, vect v) { lst.push_back(v); }
-    static type_result get_value(type &lst) {
-      #ifdef USE_CILK
-        return lst.get_value();
-      #else
-        return lst;
-      #endif
-    }
+    static type_result get_value(type &lst) { return CILK_GET_VALUE(lst); }
   };
 
   struct ResultCounter {
     using type = counter;
     using type_result = uint64_t;
     static void update(type &counter, vect v) { counter++; }
-    static type_result get_value(type &counter) {
-      #ifdef USE_CILK
-        return counter.get_value();
-      #else
-        return counter;
-      #endif
-    }
+    static type_result get_value(type &counter) { return CILK_GET_VALUE(counter); }
   };
 
   template<class Res>
