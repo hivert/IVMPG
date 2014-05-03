@@ -18,7 +18,7 @@ Type: 'scons [options] program' to build the production program,
 ######################################################################################
 
 
-env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-g', '-DNDEBUG',
+env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-g', '-funroll-loops', '-DNDEBUG',
                             '-Wall', '-Wno-missing-braces', '-Wno-unused-variable'])
 
 vars = Variables()

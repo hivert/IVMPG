@@ -37,7 +37,7 @@ struct alignas(16) Vect16
   uint8_t &operator[](uint64_t i) { return p[i]; }
 
   uint64_t first_diff(const Vect16 &b, size_t bound = N) const {
-    return _mm_cmpestri (v, bound, b.v, bound, FIRST_DIFF);
+    return unsigned(_mm_cmpestri (v, bound, b.v, bound, FIRST_DIFF));
   }
 
   bool operator==(const Vect16 &b) const {
@@ -67,7 +67,7 @@ struct alignas(16) Vect16
   template <char IDX_MODE>
   uint64_t search_index(int bound) const {
     const __m128i zero {0, 0};
-    return _mm_cmpestri(zero, 1, v, bound, IDX_MODE);
+    return unsigned(_mm_cmpestri(zero, 1, v, bound, IDX_MODE));
   }
 
   uint64_t last_non_zero(int bound=N) const { return search_index<LAST_NON_ZERO>(bound); }
@@ -77,7 +77,7 @@ struct alignas(16) Vect16
 
   bool is_permutation(const size_t k = N) const {
     constexpr const __m128i idv = __m128i(epi8 {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15});
-    uint64_t diff = _mm_cmpestri(v, N, idv, N, LAST_DIFF);
+    uint64_t diff = unsigned(_mm_cmpestri(v, N, idv, N, LAST_DIFF));
     return
       _mm_cmpestri(idv, N, v, N, FIRST_NON_ZERO) == N and // all(x in idv for x in v)
       _mm_cmpestri(v, N, idv, N, FIRST_NON_ZERO) == N and // all(x in v for x in idv)
