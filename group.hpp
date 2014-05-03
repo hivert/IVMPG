@@ -67,8 +67,6 @@ struct BFS_storage {
 template< class perm  = Perm16 >
 class PermutationGroup {
 
-  class Children;
-
 public:
 
   using vect = typename perm::vect;
@@ -97,31 +95,10 @@ public:
   // };
   typename Res::type_result elements_of_depth_walk(uint64_t depth) const;
 
-  Children children(const vect &v) const { return {*this, v}; }
-
-private:
-
-  class Children {
-
-    class Iterator {
-      const Children &ch;
-      uint64_t ind;
-    public:
-      Iterator(const Children &ch) : ch(ch), ind(ch.father.last_non_zero(ch.gr.N)) {
-	if (ind >= ch.gr.N) ind = 0; }
-      Iterator(const Children &ch, uint64_t end) : ch(ch), ind(end) {}
-      void operator++() { ++ind; }
-      bool operator!=(const Iterator &end) const {return ind != end.ind;}
-      vect operator *() const { vect res = ch.father; ++res.p[ind]; return res; }
-    };
-
-    const PermutationGroup &gr;
-    const vect &father;
-  public:
-    Children(const PermutationGroup &gr, const vect &v) : gr(gr), father(v) {};
-    Iterator begin() const { return {*this}; }
-    Iterator end() const { return {*this, gr.N}; }
-  };
+  uint64_t first_child_index(const vect &v) const {
+    uint64_t res = v.last_non_zero(N);
+    if (res >= N) return 0; else return res; }
+  vect ith_child(vect v, uint64_t i) const { v.p[i]++; return v; }
 
 #ifdef USE_CILK
   using counter = cilk::reducer_opadd< uint64_t >;
@@ -237,7 +214,7 @@ auto PermutationGroup<perm>::canonical(vect v, BFS_storage<vect> &store) const -
 	else if (v.first_diff(child) > i) new_to_analyse.insert(child);
       }
     }
-    to_analyse.swap(new_to_analyse);
+    std::swap(to_analyse, new_to_analyse);
   }
   return v;
 }
@@ -254,7 +231,8 @@ void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
 				       uint64_t target_depth, uint64_t depth,
 				       BFS_storage<vect> &store) const {
   if (depth == target_depth) Res::update(res, v);
-  else for (vect child : children(v)) {
+  else for (uint64_t i=first_child_index(v); i<N; i++) {
+      vect child = ith_child(v, i);
       if (is_canonical(child, store))
 	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1, store);
     }
