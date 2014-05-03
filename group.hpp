@@ -40,47 +40,32 @@
   #define cilk_spawn
 #endif
 
-#ifdef USE_CILK
-template <class vect>
-struct BFS_storage {
-  cilk::holder< set<vect> > analyse, new_analyse;
-
-  set<vect> &get_to_analyse() { return analyse(); }
-  set<vect> &get_new_to_analyse() { return new_analyse(); }
-};
-#else
-template <class vect>
-struct BFS_storage {
-  set<vect> analyse, new_analyse;
-
-  set<vect> &get_to_analyse() { return analyse; }
-  set<vect> &get_new_to_analyse() { return new_analyse; }
-};
-#endif
-
 #include "perm16.hpp"
 template< class perm  = Perm16 >
 class PermutationGroup {
 
 public:
 
+  class BFS_storage;
+
   using vect = typename perm::vect;
   using list = std::list<vect, allocator<vect> >;
   using StrongGeneratingSet = std::vector< std::vector< perm > >;
 
-  const std::string name;
-  const uint64_t N;
-  const StrongGeneratingSet sgs;
+  std::string name;
+  uint64_t N;
+  StrongGeneratingSet sgs;
 
   PermutationGroup(std::string name, uint64_t N, StrongGeneratingSet sgs) :
     name(name), N(N), sgs(sgs) { assert(check_sgs()); };
   bool check_sgs() const;
   bool is_canonical(vect v) const;
-  bool is_canonical(vect v, BFS_storage<vect> &store) const;
+  bool is_canonical(vect v, BFS_storage &store) const;
   vect canonical(vect v) const;
-  vect canonical(vect v, BFS_storage<vect> &store) const;
+  vect canonical(vect v, BFS_storage &store) const;
   list elements_of_depth(uint64_t depth) const;
   uint64_t elements_of_depth_number(uint64_t depth) const;
+
   template<typename Res> //  should implement the following interface:
   // struct Res {
   //   using type = ...
@@ -98,9 +83,21 @@ public:
 #ifdef USE_CILK
   using counter = cilk::reducer_opadd< uint64_t >;
   using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
+  class BFS_storage {
+    cilk::holder< set<vect> > analyse, new_analyse;
+  public:
+    set<vect> &get_to_analyse() { return analyse(); }
+    set<vect> &get_new_to_analyse() { return new_analyse(); }
+  };
 #else
   using counter = uint64_t;
   using list_generator = std::list< vect, allocator<vect> >;
+  class BFS_storage {
+    set<vect> analyse, new_analyse;
+  public:
+    set<vect> &get_to_analyse() { return analyse; }
+    set<vect> &get_new_to_analyse() { return new_analyse; }
+  };
 #endif
 
   struct ResultList {
@@ -132,7 +129,7 @@ public:
   template<class Res>
   void walk_tree(vect v, typename Res::type &res,
 		 uint64_t target_depth, uint64_t depth,
-		 BFS_storage<vect> &store) const;
+		 BFS_storage &store) const;
 
 };
 
@@ -158,7 +155,7 @@ bool PermutationGroup<perm>::check_sgs() const {
 
 
 template<class perm>
-bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage<vect> &store) const {
+bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage &store) const {
   set<vect> &to_analyse = store.get_to_analyse();
   set<vect> &new_to_analyse = store.get_new_to_analyse();
   to_analyse.clear();
@@ -183,12 +180,12 @@ bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage<vect> &store) cons
 
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v) const {
-  BFS_storage<vect> store {};
+  BFS_storage store {};
   return is_canonical(v, store);
 }
 
 template<class perm>
-auto PermutationGroup<perm>::canonical(vect v, BFS_storage<vect> &store) const -> vect {
+auto PermutationGroup<perm>::canonical(vect v, BFS_storage &store) const -> vect {
   set<vect> &to_analyse = store.get_to_analyse();
   set<vect> &new_to_analyse = store.get_new_to_analyse();
   to_analyse.clear();
@@ -216,7 +213,7 @@ auto PermutationGroup<perm>::canonical(vect v, BFS_storage<vect> &store) const -
 
 template<class perm>
 auto PermutationGroup<perm>::canonical(vect v) const -> vect {
-  BFS_storage<vect> store {};
+  BFS_storage store {};
   return canonical(v, store);
 }
 
@@ -224,7 +221,7 @@ template<class perm>
 template<class Res>
 void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
 				       uint64_t target_depth, uint64_t depth,
-				       BFS_storage<vect> &store) const {
+				       BFS_storage &store) const {
   if (depth == target_depth) Res::update(res, v);
   else for (uint64_t i=first_child_index(v); i<N; i++) {
       vect child = ith_child(v, i);
@@ -240,7 +237,7 @@ typename Res::type_result
 PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
   vect zero_vect {};
   typename Res::type res {};
-  BFS_storage<vect> store {};
+  BFS_storage store {};
   walk_tree<Res>(zero_vect, res, depth, 0, store);
   return Res::get_value(res);
 }
