@@ -159,8 +159,9 @@ bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage &store) const {
       for (const perm &x : transversal) {
         const vect child = list_test.permuted(x);
 	// Slight change from Borie's algorithm's: we do a full lex comparison first.
-	if (v < child) return false;
-        if (v.first_diff(child) > i) new_to_analyse.insert(child);
+	uint64_t first_diff = v.first_diff(child);
+	if ((first_diff < N) and v[first_diff] < child[first_diff]) return false;
+        if (first_diff > i) new_to_analyse.insert(child);
       }
     }
     to_analyse.swap(new_to_analyse);
