@@ -200,7 +200,7 @@ bool PermutationGroup<Perm16>::is_canonical(vect v,
 	if (!(diff & (1<<i))) new_to_analyse.insert(child);
       }
     }
-    to_analyse.swap(new_to_analyse);
+    std::swap(to_analyse, new_to_analyse);
   }
   return true;
 }
