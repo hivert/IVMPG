@@ -60,7 +60,7 @@ public:
     name(name), N(N), sgs(sgs) { assert(check_sgs()); };
   bool check_sgs() const;
   bool is_canonical(vect v) const;
-  bool is_canonical(vect v, BFS_storage &store) const;
+  bool is_canonical(vect v, set<vect> &to_analyse, set<vect> &new_to_analyse) const;
   vect canonical(vect v) const;
   vect canonical(vect v, BFS_storage &store) const;
   list elements_of_depth(uint64_t depth) const;
@@ -146,9 +146,9 @@ bool PermutationGroup<perm>::check_sgs() const {
 
 
 template<class perm>
-bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage &store) const {
-  set<vect> &to_analyse = store.get_to_analyse();
-  set<vect> &new_to_analyse = store.get_new_to_analyse();
+bool PermutationGroup<perm>::is_canonical(vect v,
+					  set<vect> &to_analyse,
+					  set<vect> &new_to_analyse) const {
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
@@ -173,9 +173,9 @@ bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage &store) const {
 }
 
 template<>
-bool PermutationGroup<Perm16>::is_canonical(vect v, BFS_storage &store) const {
-  set<vect> &to_analyse = store.get_to_analyse();
-  set<vect> &new_to_analyse = store.get_new_to_analyse();
+bool PermutationGroup<Perm16>::is_canonical(vect v,
+					    set<vect> &to_analyse,
+					    set<vect> &new_to_analyse) const {
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
@@ -201,10 +201,11 @@ bool PermutationGroup<Perm16>::is_canonical(vect v, BFS_storage &store) const {
   return true;
 }
 
+
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v) const {
   BFS_storage store {};
-  return is_canonical(v, store);
+  return is_canonical(v, store.get_to_analyse(), store.get_new_to_analyse());
 }
 
 template<class perm>
@@ -249,7 +250,7 @@ void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
   if (depth == target_depth) Res::update(res, v);
   else for (uint64_t i=first_child_index(v); i<N; i++) {
       vect child = ith_child(v, i);
-      if (is_canonical(child, store))
+      if (is_canonical(child, store.get_to_analyse(), store.get_new_to_analyse()))
 	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1, store);
     }
 }
