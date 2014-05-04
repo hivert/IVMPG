@@ -53,15 +53,16 @@ struct alignas(16) Vect16
 
   bool operator==(const Vect16 &b) const {
     return _mm_movemask_epi8(_mm_cmpeq_epi8(v, b.v)) == 0xffff;
-    //return first_diff(b) == Size;
+    // return first_diff(b) == Size;
   }
   bool operator!=(const Vect16 &b) const {
-    return first_diff(b) != Size;
+    return _mm_movemask_epi8(_mm_cmpeq_epi8(v, b.v)) != 0xffff;
+    // return first_diff(b) != Size;
   }
 
   bool operator < (const Vect16 &b) const {
     uint64_t diff = first_diff(b);
-    return (diff != Size) and p[diff] < b[diff];
+    return (diff < Size) and p[diff] < b[diff];
   }
 
   char less_partial(const Vect16 &b, int k) const {
