@@ -18,7 +18,7 @@ Type: 'scons [options] program' to build the production program,
 ######################################################################################
 
 
-env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-g', '-DNDEBUG',
+env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-ggdb', '-funroll-loops', '-DNDEBUG',
                             '-Wall', '-Wno-missing-braces', '-Wno-unused-variable'])
 
 vars = Variables()
@@ -118,7 +118,7 @@ perm16mod  = env.Cython('perm16mod.pyx',
 Depends(perm16mod, Split('perm16mod.pxd group16.pxd'))
 
 sage_env = env.Clone()
-sage_env.Append(CPPFLAGS = '-fno-strict-aliasing',
+sage_env.Append(CPPFLAGS = ['-fno-strict-aliasing', '-Wno-attributes'],
                 CPPPATH = SAGE_INCLUDE_DIR,
                 LIBPATH = [SAGE_LIB],
                 LIBS    = ['csage'],
