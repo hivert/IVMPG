@@ -143,7 +143,6 @@ bool PermutationGroup<perm>::check_sgs() const {
 }
 
 
-
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage &store) const {
   set<vect> &to_analyse = store.get_to_analyse();
@@ -162,6 +161,35 @@ bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage &store) const {
 	uint64_t first_diff = v.first_diff(child);
 	if ((first_diff < N) and v[first_diff] < child[first_diff]) return false;
         if (first_diff > i) new_to_analyse.insert(child);
+      }
+    }
+    to_analyse.swap(new_to_analyse);
+  }
+  return true;
+}
+
+template<>
+bool PermutationGroup<Perm16>::is_canonical(vect v, BFS_storage &store) const {
+  set<vect> &to_analyse = store.get_to_analyse();
+  set<vect> &new_to_analyse = store.get_new_to_analyse();
+  to_analyse.clear();
+  new_to_analyse.clear();
+  to_analyse.insert(v);
+
+  for (uint64_t i=0; i < N-1; i++) {
+    new_to_analyse.clear();
+    const auto &transversal = sgs[i];
+    for (const vect &list_test : to_analyse) {
+      // transversal always start with the identity. 
+      if (v[i] == list_test[i]) new_to_analyse.insert(list_test);
+      for (auto it = transversal.begin()+1; it != transversal.end(); it++) {
+        const vect child = list_test.permuted(*it);
+	// Slight change from Borie's algorithm's: we do a full lex comparison first.
+	const uint64_t diff = ~ unsigned(_mm_movemask_epi8(_mm_cmpeq_epi8(v.v, child.v)));
+	const uint64_t lt   =   unsigned(_mm_movemask_epi8(_mm_cmplt_epi8(v.v, child.v)));
+	const uint64_t first_diff = (diff & ~(diff - 1));
+	if (first_diff & lt) return false;
+	if (!(diff & (1<<i))) new_to_analyse.insert(child);
       }
     }
     to_analyse.swap(new_to_analyse);
