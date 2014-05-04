@@ -155,8 +155,10 @@ bool PermutationGroup<perm>::is_canonical(vect v, BFS_storage &store) const {
     new_to_analyse.clear();
     const auto &transversal = sgs[i];
     for (const vect &list_test : to_analyse) {
-      for (const perm &x : transversal) {
-        const vect child = list_test.permuted(x);
+      // transversal always start with the identity. 
+      if (v[i] == list_test[i]) new_to_analyse.insert(list_test);
+      for (auto it = transversal.begin()+1; it != transversal.end(); it++) {
+        const vect child = list_test.permuted(*it);
 	// Slight change from Borie's algorithm's: we do a full lex comparison first.
 	uint64_t first_diff = v.first_diff(child);
 	if ((first_diff < N) and v[first_diff] < child[first_diff]) return false;
@@ -187,7 +189,7 @@ bool PermutationGroup<Perm16>::is_canonical(vect v, BFS_storage &store) const {
 	// Slight change from Borie's algorithm's: we do a full lex comparison first.
 	const uint64_t diff = ~ unsigned(_mm_movemask_epi8(_mm_cmpeq_epi8(v.v, child.v)));
 	const uint64_t lt   =   unsigned(_mm_movemask_epi8(_mm_cmplt_epi8(v.v, child.v)));
-	const uint64_t first_diff = (diff & ~(diff - 1));
+	const uint64_t first_diff = diff & (-diff);
 	if (first_diff & lt) return false;
 	if (!(diff & (1<<i))) new_to_analyse.insert(child);
       }
@@ -215,8 +217,9 @@ auto PermutationGroup<perm>::canonical(vect v, BFS_storage &store) const -> vect
     new_to_analyse.clear();
     const auto &transversal = sgs[i];
     for (const vect &list_test : to_analyse) {
-      for (const perm &x : transversal) {
-        const vect child = list_test.permuted(x);
+      if (v[i] == list_test[i]) new_to_analyse.insert(list_test);
+      for (auto it = transversal.begin()+1; it != transversal.end(); it++) {
+        const vect child = list_test.permuted(*it);
 	// TODO: find a better algorithm !
 	// TODO: the following doesn't work:
 	//       if (v.less_partial(child, i+1) < 0) v = child;
