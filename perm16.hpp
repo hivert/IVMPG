@@ -25,13 +25,24 @@ const char LAST_NON_ZERO = (_SIDD_UBYTE_OPS | _SIDD_CMP_EQUAL_ANY |
 
 struct alignas(16) Vect16
 {
+
+  static const constexpr size_t Size = 16;
+
   union {
     vect16 p;
     __m128i v;
     epi8 v8;
   };
 
-  static const constexpr size_t Size = 16;
+  // Overload the default copy constructor and operator= : 10% speedup
+  Vect16() = default;
+  Vect16(const Vect16 &x) { v = x.v; }
+  Vect16(std::initializer_list<uint8_t> il) {
+    assert (il.size() <= Size);
+    std::copy(il.begin(), il.end(), this->p.begin());
+    for (uint64_t i = il.size(); i<Size; i++) this->p[i] = 0;
+  }
+  Vect16 &operator =(const Vect16 &x) {v = x.v; return *this;}
 
   uint8_t operator[](uint64_t i) const { return p[i]; }
   uint8_t &operator[](uint64_t i) { return p[i]; }
