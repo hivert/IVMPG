@@ -25,6 +25,9 @@ struct VectGeneric {
   bool operator==(const VectGeneric &b) const {
     return first_diff(b) == Size;
   }
+  bool operator!=(const VectGeneric &b) const {
+    return first_diff(b) != Size;
+  }
 
   bool operator < (const VectGeneric &b) const {
     uint64_t diff = first_diff(b);

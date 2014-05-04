@@ -133,12 +133,14 @@ std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g
 
 template<class perm>
 bool PermutationGroup<perm>::check_sgs() const {
-  for (uint64_t level = 0; level<sgs.size(); level++)
+  for (uint64_t level = 0; level<sgs.size(); level++) {
+    if (sgs[level][0] != perm::one()) return false;
     for (const perm &v : sgs[level]) {
       if (not v.is_permutation(N)) return false;
       for (uint64_t i=0; i<level; i++)
 	if (not (v[i] == i)) return false;
     }
+  }
   return true;
 }
 
