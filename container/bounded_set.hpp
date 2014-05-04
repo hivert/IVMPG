@@ -12,7 +12,7 @@ class bounded_set {
   };
 
   size_t bound;
-  Hash hashfun;
+  static const constexpr Hash hashfun = Hash();
   Pair *buckets; // we use an extra pair as a sentinel for the end of the linked list.
   Pair *first;
 
@@ -28,8 +28,9 @@ public:
 
   bounded_set(bounded_set&) = delete;
 
-  bounded_set(size_t bound = 2048, Hash fun = Hash()) :
-    bound(bound), hashfun(fun), buckets(new Pair[bound+1]), first(buckets+bound) {
+  bounded_set(size_t bound = 2048) :
+    bound(bound),
+    buckets(new Pair[bound+1]), first(buckets+bound) {
     for (size_t i=0; i<bound; ++i) buckets[i].next = nullptr;
   }
 
@@ -67,7 +68,6 @@ private:
 template <class Key, class Hash >
 auto bounded_set<Key, Hash>::operator=(bounded_set&& rhs) & noexcept -> bounded_set & {
   assert(this != &rhs);
-  hashfun = rhs.hashfun;
   bound   = rhs.bound;
   buckets = rhs.buckets;
   first   = rhs.first;
