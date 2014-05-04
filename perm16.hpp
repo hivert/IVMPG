@@ -104,13 +104,9 @@ namespace std {
   template<>
   struct hash<Vect16> {
     size_t operator () (const Vect16 &ar) const {
-    #ifdef GCC_VECT_CMP
-      return ar.v[1] ^ ar.v[0];
-    #else
-      size_t h = 0;
-      for (int i=0; i<Vect16::Size; i++) h = hash<uint8_t>()(ar[i]) + (h << 6) + (h << 16) - h;
-      return h;
-    #endif
+      size_t res = ar.v[1] + (ar.v[1] << 1) + ar.v[0];
+      res += (res >> 11);
+      return res;
     }
   };
 

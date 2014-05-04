@@ -38,7 +38,6 @@ public:
 
   ~bounded_set() { delete [] buckets; };
 
-  // Iterator insert(Key key);
   void insert(Key key);
   void clear();
   Iterator begin() const { return {*this, first}; }
@@ -86,17 +85,16 @@ void bounded_set<Key, Hash>::clear() {
 }
 
 template <class Key, class Hash >
-//auto bounded_set<Key, Hash>::insert(Key key) -> Iterator {
 void bounded_set<Key, Hash>::insert(Key key) {
   size_t hash = hashfun(key) & (bound-1);
-  while (buckets[hash].next != nullptr and buckets[hash].key != key)
-    hash = hash < bound - 1 ? hash+1 : 0;
+  while (buckets[hash].next != nullptr and buckets[hash].key != key) {
+    hash = hash < bound-1 ? hash+1 : 0;
+  }
   if (buckets[hash].next == nullptr) {
     buckets[hash].key = key;
     buckets[hash].next = first;
-    first = &buckets[hash];
+    first = buckets + hash;
   }
-  //  return {*this, &buckets[hash]};
 }
 
 template <class Key, class Hash >
