@@ -28,7 +28,7 @@ public:
 
   bounded_set(bounded_set&) = delete;
 
-  bounded_set(size_t bound = 256, Hash fun = Hash()) :
+  bounded_set(size_t bound = 2048, Hash fun = Hash()) :
     bound(bound), hashfun(fun), buckets(new Pair[bound+1]), first(buckets+bound) {
     for (size_t i=0; i<bound; ++i) buckets[i].next = nullptr;
   }
@@ -38,7 +38,8 @@ public:
 
   ~bounded_set() { delete [] buckets; };
 
-  Iterator insert(Key key);
+  // Iterator insert(Key key);
+  void insert(Key key);
   void clear();
   Iterator begin() const { return {*this, first}; }
   Iterator end() const { return {*this, sentinel()}; }
@@ -55,7 +56,7 @@ private:
     Iterator(const bounded_set &set, Pair *it) : set(set), it(it) { }
   public:
     void operator++() { it = it->next; }
-    const Key &operator*() const { return it->key;}
+    Key operator*() const { return it->key;}
     bool operator==(const Iterator &other) const { return it == other.it; }
     bool operator!=(const Iterator &other) const { return it != other.it; }
   };
@@ -68,9 +69,10 @@ template <class Key, class Hash >
 auto bounded_set<Key, Hash>::operator=(bounded_set&& rhs) & noexcept -> bounded_set & {
   assert(this != &rhs);
   hashfun = rhs.hashfun;
-  bound   = rhs.bound;   rhs.bound   = 0;
-  buckets = rhs.buckets; rhs.buckets = nullptr;
-  first   = rhs.first;   rhs.first   = nullptr;
+  bound   = rhs.bound;
+  buckets = rhs.buckets;
+  first   = rhs.first;
+  rhs.buckets = nullptr; // to avoid double free
   return *this;
 }
 
@@ -84,7 +86,8 @@ void bounded_set<Key, Hash>::clear() {
 }
 
 template <class Key, class Hash >
-auto bounded_set<Key, Hash>::insert(Key key) -> Iterator  {
+//auto bounded_set<Key, Hash>::insert(Key key) -> Iterator {
+void bounded_set<Key, Hash>::insert(Key key) {
   size_t hash = hashfun(key) & (bound-1);
   while (buckets[hash].next != nullptr and buckets[hash].key != key)
     hash = hash < bound - 1 ? hash+1 : 0;
@@ -93,7 +96,7 @@ auto bounded_set<Key, Hash>::insert(Key key) -> Iterator  {
     buckets[hash].next = first;
     first = &buckets[hash];
   }
-  return {*this, &buckets[hash]};
+  //  return {*this, &buckets[hash]};
 }
 
 template <class Key, class Hash >
