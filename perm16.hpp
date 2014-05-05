@@ -99,14 +99,27 @@ struct alignas(16) Vect16
 
 };
 
+const uint64_t prime = 0x9e3779b97f4a7bb9;
+
 namespace std {
 
   template<>
   struct hash<Vect16> {
     size_t operator () (const Vect16 &ar) const {
-      size_t res = ar.v[1] + (ar.v[1] << 1) + ar.v[0];
-      res += (res >> 11);
-      return res;
+      uint64_t v1 = _mm_extract_epi64(ar.v, 1);
+      return (v1*prime) >> 54;
+
+      // Timing for a 1024 hash table with SET_STATISTIC defined
+      //////////////////////////////////////////////////////////
+      //                                             1 proc   8 proc  collision retry
+      // return ((v1*prime + v0)*prime) >> 52;   // 7.39027  1.68039    0.0783%
+      // return ((v1 + (v0 << 4))*prime) >> 52;  // 7.67103  1.69188    0.0877%
+      // return ((v1 + v0 )*prime) >> 52;        // 7.25443  1.63157    0.267%
+      // return (v1*prime) >> 52;                // 7.15018  1.61709    2.16%
+      // return 0;                               // 8.0689   2.09339  159.%
+
+      // Indexing acces is always slower.
+      // return (ar.v[1]*prime) >> 52;              // 1.68217
     }
   };
 
@@ -115,7 +128,6 @@ namespace std {
     // WARNING: due to endianess this is not lexicographic comparison,
     //          but we don't care when using is std::set.
     // 10% faster than calling the lexicographic comparison operator !
-    // returning a size_t is 2% even faster !
     size_t operator () (const Vect16 &v1, const Vect16 &v2) const {
       return v1.v[0] == v2.v[0] ? v1.v[1] < v2.v[1] : v1.v[0] < v2.v[0];
     }
