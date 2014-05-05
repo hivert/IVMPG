@@ -17,39 +17,43 @@
   using allocator = std::allocator<T>;
 #endif
 
-//template<class T>
-//using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator>;
-#include "container/bounded_set.hpp"
 
-// #ifdef USE_BOOST_FLAT_SET
-//   #include <boost/container/flat_set.hpp>
-//   template<class T>
-//   using set = boost::container::flat_set< T, std::less<T>, allocator<T> >;
-// #else
-//   #include <set>
-//   template<class T>
-//   using set = std::set< T, std::less<T>, allocator<T> >;
-// #endif
+#if GROUP_USE_SET == 1     // UNORDERED_SET
+  #include <unordered_set>
+  template<class T>
+  using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator<T> >;
+#elif GROUP_USE_SET == 2   // BOOST_FLAT_SET
+//#ifdef USE_BOOST_FLAT_SET
+  #include <boost/container/flat_set.hpp>
+  template<class T>
+  using set = boost::container::flat_set< T, std::less<T>, allocator<T> >;
+#elif GROUP_USE_SET == 3   // STD_SET
+  #include <set>
+  template<class T>
+  using set = std::set< T, std::less<T>, allocator<T> >;
+#else                      // BOUNDED_SET
+  #include "container/bounded_set.hpp"
+  template<class T>
+  using set = bounded_set< T >;
+#endif
 
-template<class T>
-using set = bounded_set< T >;
 
 #ifdef USE_CILK
   #include <cilk/cilk.h>
   #include <cilk/cilk_api.h>
   #include <cilk/reducer_list.h>
   #include <cilk/reducer_opadd.h>
-  #include <cilk/holder.h>
 #else
   #define cilk_spawn
 #endif
 
+
 #include "temp_storage.hpp"
 #include "perm16.hpp"
 
+
 template< class perm  = Perm16 >
 class PermutationGroup {
-
 
 public:
 
@@ -69,13 +73,14 @@ private:
   using counter = cilk::reducer_opadd< uint64_t >;
   using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
 
-  // using BFS_storage = Storage_holder< TemporaryStorage  >;
-  using BFS_storage = Storage_thread_local< TemporaryStorage  >;
+  // Using thread local only gain a few percent
+  // using BFS_storage = Storage_holder< TemporaryStorage >;
+  using BFS_storage = Storage_thread_local< TemporaryStorage >;
 #else
 #define CILK_GET_VALUE(v) (v)
   using counter = uint64_t;
   using list_generator = std::list< vect, allocator<vect> >;
-  using BFS_storage = Storage_dummy< std::pair< TemporaryStorage >;
+  using BFS_storage = Storage_dummy< TemporaryStorage >;
 #endif
 
 public:
