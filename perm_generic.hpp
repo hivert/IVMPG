@@ -82,7 +82,7 @@ namespace std {
   struct hash< VectGeneric<Size,Expo> > {
     size_t operator () (const VectGeneric<Size,Expo> &ar) const {
       size_t h = 0;
-      for (int i=0; i<VectGeneric<Size,Expo>::Size; i++)
+      for (size_t i=0; i<VectGeneric<Size,Expo>::Size; i++)
 	h = hash<Expo>()(ar[i]) + (h << 6) + (h << 16) - h;
       return h;
     }
