@@ -2,6 +2,7 @@
 #define _GROUP_HPP
 
 #include <cassert>
+#include <utility>
 #include <vector>
 #include <list>
 #include <string>
@@ -43,14 +44,14 @@ using set = bounded_set< T >;
   #define cilk_spawn
 #endif
 
+#include "temp_storage.hpp"
 #include "perm16.hpp"
 
 template< class perm  = Perm16 >
 class PermutationGroup {
 
-public:
 
-  class BFS_storage;
+public:
 
   using vect = typename perm::vect;
   using list = std::list<vect, allocator<vect> >;
@@ -59,6 +60,24 @@ public:
   std::string name;
   uint64_t N;
   StrongGeneratingSet sgs;
+
+private:
+
+#ifdef USE_CILK
+#define CILK_GET_VALUE(v) (v).get_value()
+  using counter = cilk::reducer_opadd< uint64_t >;
+  using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
+
+  // using BFS_storage = Storage_holder< std::pair< set<vect>, set<vect> > >;
+  using BFS_storage = Storage_thread_local< std::pair< set<vect>, set<vect> > >;
+#else
+#define CILK_GET_VALUE(v) (v)
+  using counter = uint64_t;
+  using list_generator = std::list< vect, allocator<vect> >;
+  using BFS_storage = Storage_dummy< std::pair< set<vect>, set<vect> > >;
+#endif
+
+public:
 
   PermutationGroup(std::string name, uint64_t N, StrongGeneratingSet sgs) :
     name(name), N(N), sgs(sgs) { assert(check_sgs()); };
@@ -83,28 +102,6 @@ public:
     uint64_t res = v.last_non_zero(N);
     if (res >= N) return 0; else return res; }
   vect ith_child(vect v, uint64_t i) const { v.p[i]++; return v; }
-
-#ifdef USE_CILK
-#define CILK_GET_VALUE(v) (v).get_value()
-  using counter = cilk::reducer_opadd< uint64_t >;
-  using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
-  class BFS_storage {
-    cilk::holder< set<vect> > analyse, new_analyse;
-  public:
-    set<vect> &get_to_analyse() { return analyse(); }
-    set<vect> &get_new_to_analyse() { return new_analyse(); }
-  };
-#else
-#define CILK_GET_VALUE(v) (v)
-  using counter = uint64_t;
-  using list_generator = std::list< vect, allocator<vect> >;
-  class BFS_storage {
-    set<vect> analyse, new_analyse;
-  public:
-    set<vect> &get_to_analyse() { return analyse; }
-    set<vect> &get_new_to_analyse() { return new_analyse; }
-  };
-#endif
 
   struct ResultList {
     using type = list_generator;
@@ -214,8 +211,8 @@ bool PermutationGroup<perm>::is_canonical(vect v) const {
 
 template<class perm>
 auto PermutationGroup<perm>::canonical(vect v, BFS_storage &store) const -> vect {
-  auto &to_analyse = store.get_to_analyse();
-  auto &new_to_analyse = store.get_new_to_analyse();
+  auto &to_analyse = store.get_store().first;
+  auto &new_to_analyse = store.get_store().second;
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
@@ -254,7 +251,7 @@ void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
   if (depth == target_depth) Res::update(res, v);
   else for (uint64_t i=first_child_index(v); i<N; i++) {
       vect child = ith_child(v, i);
-      if (is_canonical(child, store.get_to_analyse(), store.get_new_to_analyse()))
+      if (is_canonical(child, store.get_store().first, store.get_store().second))
 	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1, store);
     }
 }

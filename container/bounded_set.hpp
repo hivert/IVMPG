@@ -12,6 +12,7 @@ class bounded_set {
   };
 
   size_t bound;
+  //static const constexpr Hash hashfun = Hash();
   static const constexpr Hash hashfun = Hash();
   Pair *buckets; // we use an extra pair as a sentinel for the end of the linked list.
   Pair *first;
@@ -26,8 +27,13 @@ public:
   typedef Key      value_type;
   typedef Iterator iterator;
 
-  bounded_set(bounded_set&) = delete;
-
+  bounded_set(const bounded_set& s) :
+    bound(s.bound),  buckets(new Pair[bound+1]), first(s.first - s.buckets + buckets) {
+    for (size_t i=0; i<bound; ++i) {
+      buckets[i].key = s.buckets[i].key;
+      buckets[i].next = s.buckets[i].next - s.buckets + buckets;
+    }
+  }
   bounded_set(size_t bound = 2048) :
     bound(bound),
     buckets(new Pair[bound+1]), first(buckets+bound) {
@@ -62,6 +68,9 @@ private:
   };
 
 };
+
+template <class Key, class Hash >
+const constexpr Hash bounded_set<Key, Hash>::hashfun;
 
 #include <iostream>
 
