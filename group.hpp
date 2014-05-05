@@ -56,6 +56,7 @@ public:
   using vect = typename perm::vect;
   using list = std::list<vect, allocator<vect> >;
   using StrongGeneratingSet = std::vector< std::vector< perm > >;
+  using TemporaryStorage = std::pair< set<vect>, set<vect> >;
 
   std::string name;
   uint64_t N;
@@ -68,13 +69,13 @@ private:
   using counter = cilk::reducer_opadd< uint64_t >;
   using list_generator = cilk::reducer_list_append< vect, allocator<vect> >;
 
-  // using BFS_storage = Storage_holder< std::pair< set<vect>, set<vect> > >;
-  using BFS_storage = Storage_thread_local< std::pair< set<vect>, set<vect> > >;
+  // using BFS_storage = Storage_holder< TemporaryStorage  >;
+  using BFS_storage = Storage_thread_local< TemporaryStorage  >;
 #else
 #define CILK_GET_VALUE(v) (v)
   using counter = uint64_t;
   using list_generator = std::list< vect, allocator<vect> >;
-  using BFS_storage = Storage_dummy< std::pair< set<vect>, set<vect> > >;
+  using BFS_storage = Storage_dummy< std::pair< TemporaryStorage >;
 #endif
 
 public:
@@ -83,9 +84,9 @@ public:
     name(name), N(N), sgs(sgs) { assert(check_sgs()); };
   bool check_sgs() const;
   bool is_canonical(vect v) const;
-  bool is_canonical(vect v, set<vect> &to_analyse, set<vect> &new_to_analyse) const;
+  bool is_canonical(vect v, TemporaryStorage &) const;
   vect canonical(vect v) const;
-  vect canonical(vect v, BFS_storage &store) const;
+  vect canonical(vect v, TemporaryStorage &) const;
   list elements_of_depth(uint64_t depth) const;
   uint64_t elements_of_depth_number(uint64_t depth) const;
 
@@ -147,9 +148,10 @@ bool PermutationGroup<perm>::check_sgs() const {
 
 
 template<class perm>
-bool PermutationGroup<perm>::is_canonical(vect v,
-					  set<vect> &to_analyse,
-					  set<vect> &new_to_analyse) const {
+bool PermutationGroup<perm>::is_canonical(vect v, TemporaryStorage &st) const {
+  set<vect> &to_analyse = st.first;
+  set<vect> &new_to_analyse = st.second;
+
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
@@ -174,9 +176,10 @@ bool PermutationGroup<perm>::is_canonical(vect v,
 }
 
 template<>
-bool PermutationGroup<Perm16>::is_canonical(vect v,
-					    set<vect> &to_analyse,
-					    set<vect> &new_to_analyse) const {
+bool PermutationGroup<Perm16>::is_canonical(vect v, TemporaryStorage &st) const {
+  set<vect> &to_analyse = st.first;
+  set<vect> &new_to_analyse = st.second;
+
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
@@ -205,14 +208,15 @@ bool PermutationGroup<Perm16>::is_canonical(vect v,
 
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v) const {
-  BFS_storage store {};
-  return is_canonical(v, store.get_to_analyse(), store.get_new_to_analyse());
+  TemporaryStorage storage;
+  return is_canonical(v, storage);
 }
 
 template<class perm>
-auto PermutationGroup<perm>::canonical(vect v, BFS_storage &store) const -> vect {
-  auto &to_analyse = store.get_store().first;
-  auto &new_to_analyse = store.get_store().second;
+auto PermutationGroup<perm>::canonical(vect v, TemporaryStorage &st) const -> vect {
+  set<vect> &to_analyse = st.first;
+  set<vect> &new_to_analyse = st.second;
+
   to_analyse.clear();
   new_to_analyse.clear();
   to_analyse.insert(v);
@@ -228,7 +232,7 @@ auto PermutationGroup<perm>::canonical(vect v, BFS_storage &store) const -> vect
 	// TODO: the following doesn't work:
 	//       if (v.less_partial(child, i+1) < 0) v = child;
 	//       if (v < child) v = child;
-	if (v < child) return canonical(child, store);
+	if (v < child) return canonical(child, st);
 	else if (v.first_diff(child) > i) new_to_analyse.insert(child);
       }
     }
@@ -239,8 +243,8 @@ auto PermutationGroup<perm>::canonical(vect v, BFS_storage &store) const -> vect
 
 template<class perm>
 auto PermutationGroup<perm>::canonical(vect v) const -> vect {
-  BFS_storage store {};
-  return canonical(v, store);
+  TemporaryStorage storage;
+  return canonical(v, storage);
 }
 
 template<class perm>
@@ -251,7 +255,7 @@ void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
   if (depth == target_depth) Res::update(res, v);
   else for (uint64_t i=first_child_index(v); i<N; i++) {
       vect child = ith_child(v, i);
-      if (is_canonical(child, store.get_store().first, store.get_store().second))
+      if (is_canonical(child, store.get_store()))
 	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1, store);
     }
 }
