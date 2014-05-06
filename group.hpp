@@ -151,7 +151,6 @@ bool PermutationGroup<perm>::check_sgs() const {
   return true;
 }
 
-
 template<class perm>
 bool PermutationGroup<perm>::is_canonical(vect v, TemporaryStorage &st) const {
   set<vect> &to_analyse = st.first;
@@ -180,6 +179,13 @@ bool PermutationGroup<perm>::is_canonical(vect v, TemporaryStorage &st) const {
   return true;
 }
 
+#define SET_SIZE_STATISTIC
+
+#ifdef SET_SIZE_STATISTIC
+size_t set_number = 0;
+size_t set_size = 0;
+#endif
+
 template<>
 bool PermutationGroup<Perm16>::is_canonical(vect v, TemporaryStorage &st) const {
   set<vect> &to_analyse = st.first;
@@ -193,7 +199,7 @@ bool PermutationGroup<Perm16>::is_canonical(vect v, TemporaryStorage &st) const 
     new_to_analyse.clear();
     const auto &transversal = sgs[i];
     for (const vect &list_test : to_analyse) {
-      // transversal always start with the identity. 
+      // transversal always start with the identity.
       if (v[i] == list_test[i]) new_to_analyse.insert(list_test);
       for (auto it = transversal.begin()+1; it != transversal.end(); it++) {
         const vect child = list_test.permuted(*it);
@@ -205,6 +211,10 @@ bool PermutationGroup<Perm16>::is_canonical(vect v, TemporaryStorage &st) const 
 	if (!(diff & (1<<i))) new_to_analyse.insert(child);
       }
     }
+#ifdef SET_SIZE_STATISTIC
+    set_number++;
+    set_size += new_to_analyse.size();
+#endif
     std::swap(to_analyse, new_to_analyse);
   }
   return true;
@@ -273,7 +283,15 @@ PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
   vect zero_vect {};
   typename Res::type res {};
   BFS_storage store {};
+#ifdef SET_SIZE_STATISTIC
+  set_number = 0;
+  set_size = 0;
+#endif
   walk_tree<Res>(zero_vect, res, depth, 0, store);
+#ifdef SET_SIZE_STATISTIC
+  std::cout << "Number of sets = "<<set_number <<
+    ", Mean size = " << 1.*set_size / set_number << std::endl;
+#endif
   return Res::get_value(res);
 }
 
