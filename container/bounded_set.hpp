@@ -121,7 +121,7 @@ void bounded_set<Key, Hash>::insert(Key key) {
 #ifdef SET_STATISTIC
   request++;
 #endif
-  size_t hash = hashfun(key);
+  size_t hash = hashfun(key) & (bound-1);
   while (buckets[hash].next != nullptr and buckets[hash].key != key) {
     hash = hash < bound-1 ? hash+1 : 0;
 #ifdef SET_STATISTIC
