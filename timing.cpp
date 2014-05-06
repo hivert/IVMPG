@@ -11,7 +11,7 @@ using namespace std::chrono;
 using MyGroup = PermutationGroup16;
 MyGroup g_Borie = GroupExamples< MyGroup >::g_Borie;
 
-long time_it(MyGroup gr, int level, long expected_size) {
+long time_it(MyGroup gr, int level, size_t expected_size) {
   high_resolution_clock::time_point tstart, tfin;
 
   cout << gr.name << " ( " << level << " ) : " << flush;
@@ -26,7 +26,7 @@ long time_it(MyGroup gr, int level, long expected_size) {
   return lst.size();
 }
 
-long count_it(MyGroup gr, int level, long expected_size) {
+long count_it(MyGroup gr, int level, size_t expected_size) {
   high_resolution_clock::time_point tstart, tfin;
 
   cout << gr.name << " ( " << level << " ) : " << flush;
