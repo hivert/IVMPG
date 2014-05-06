@@ -81,4 +81,37 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE( elements_of_depth_test, F, Fixtures, F )
   BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth(20).size(),   57605 ); // Checked with Sage
 }
 
+BOOST_FIXTURE_TEST_CASE_TEMPLATE( elements_of_depth_max_part_test, F, Fixtures, F )
+{
+  std::vector< std::vector<int> > S3_sz { // Checked with Sage
+    {1, 0},
+    {1, 1, 1, 1, 0},
+    {1, 1, 2, 2, 2, 1, 1, 0},
+    {1, 1, 2, 3, 3, 3, 3, 2, 1, 1, 0},
+    {1, 1, 2, 3, 4, 4, 5, 4, 4, 3, 2, 1, 1, 0} };
+  for (unsigned int max = 0; max < S3_sz.size(); max++)
+    for (unsigned int i=0; i<S3_sz[max].size(); i++)
+      BOOST_CHECK_EQUAL( F::S3.elements_of_depth(i, max).size(), S3_sz[max][i] );
+
+  std::vector< std::vector<int> > g100_sz { // Checked with Sage
+    {1, 0},
+    {1, 1, 3, 3, 3, 1, 1, 0},
+    {1, 1, 4, 6, 12, 13, 18, 13, 12, 6, 4, 1, 1, 0},
+    {1, 1, 4, 7, 15, 22, 37, 44, 56, 56, 56, 44, 37, 22, 15, 7, 4, 1, 1, 0} };
+  for (unsigned int max = 0; max < g100_sz.size(); max++)
+    for (unsigned int i=0; i<g100_sz[max].size(); i++)
+      BOOST_CHECK_EQUAL( F::g100.elements_of_depth(i, max).size(), g100_sz[max][i] );
+
+  std::vector< std::vector<int> > g_Borie_sz { // Checked with Sage
+    {1, 0},
+    {1, 1, 2, 3, 5, 5, 7, 7, 8, 7, 7, 5, 5, 3, 2, 1, 1, 0},
+    {1, 1, 3, 5, 11, 16, 29, 41, 65, 85, 119, 145, 185, 207, 239, 247, 262,
+	247, 239, 207, 185, 145, 119, 85, 65, 41, 29, 16, 11, 5, 3, 1, 1, 0},
+    {1, 1, 3, 6, 13, 22, 43, 70, 121, 189, 297, 436, 642, 884, 1210, 1578,
+	2025, 2486, 3007, 3486 } };
+  for (unsigned int max = 0; max < g_Borie_sz.size(); max++)
+    for (unsigned int i=0; i<g_Borie_sz[max].size(); i++)
+      BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth(i, max).size(), g_Borie_sz[max][i] );
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -8,7 +8,10 @@ template< class Group = PermutationGroup<> > struct GroupExamples {
 };
 
 
-// Symmetric group of order 3
+/* Symmetric group of order 3
+*****************************
+G = SymmetricGroup(3)
+*****************************/
 template< class Group >
 Group GroupExamples< Group >::S3("S3", 3, {
     {{0,1,2}, {1,0,2}, {2,1,0}},
@@ -16,7 +19,10 @@ Group GroupExamples< Group >::S3("S3", 3, {
     {{0,1,2}}
   });;
 
-// transitive subgroup of S6 number 100 according to Sage
+/* transitive subgroup of S6 number 100 according to Sage
+**********************************************************
+G = PermutationGroup([[(3,5),(4,6)], [(1,5),(2,6),(3,4)]])
+**********************************************************/
 template< class Group >
 Group GroupExamples< Group >::g100("Transitive Group (6, 100)", 6,
 {{{0, 1, 2, 3, 4, 5},
@@ -32,7 +38,11 @@ Group GroupExamples< Group >::g100("Transitive Group (6, 100)", 6,
  {{0, 1, 2, 3, 4, 5}},
  {{0, 1, 2, 3, 4, 5}}});
 
-// N. Borie's favorite faforite subgroup of S16
+/* N. Borie's favorite faforite subgroup of S16
+************************************************************************
+G = PermutationGroup([[(1,8,14,12,3,7,13,9,2,5,16,11),(4,6,15,10)],
+		      [(1,13,10),(2,14,12,3,15,9,4,16,11),(5,6),(7,8)]])
+************************************************************************/
 template< class Group >
 Group GroupExamples< Group >::g_Borie("N. Borie's favorite", 16,
 {{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15},

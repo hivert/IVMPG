@@ -93,7 +93,9 @@ public:
   vect canonical(vect v) const;
   vect canonical(vect v, TemporaryStorage &) const;
   list elements_of_depth(uint64_t depth) const;
+  list elements_of_depth(uint64_t depth, uint64_t max_part) const;
   uint64_t elements_of_depth_number(uint64_t depth) const;
+  uint64_t elements_of_depth_number(uint64_t depth, uint64_t max_part) const;
 
   template<typename Res> //  should implement the following interface:
   // struct Res {
@@ -102,7 +104,7 @@ public:
   //   static void update(type &res, vect v)   // update res with v
   //   static type_result get_value(type &res) // return value in res
   // };
-  typename Res::type_result elements_of_depth_walk(uint64_t depth) const;
+  typename Res::type_result elements_of_depth_walk(uint64_t depth, uint64_t max_part) const;
 
   uint64_t first_child_index(const vect &v) const {
     uint64_t res = v.last_non_zero(N);
@@ -125,7 +127,7 @@ public:
 
   template<class Res>
   void walk_tree(vect v, typename Res::type &res,
-		 uint64_t target_depth, uint64_t depth,
+		 uint64_t target_depth, uint64_t depth, uint64_t max_part,
 		 BFS_storage &store) const;
 
 };
@@ -265,21 +267,25 @@ auto PermutationGroup<perm>::canonical(vect v) const -> vect {
 template<class perm>
 template<class Res>
 void PermutationGroup<perm>::walk_tree(vect v, typename Res::type &res,
-				       uint64_t target_depth, uint64_t depth,
-				       BFS_storage &store) const {
+       uint64_t target_depth, uint64_t depth, uint64_t max_part,
+       BFS_storage &store) const {
   if (depth == target_depth) Res::update(res, v);
-  else for (uint64_t i=first_child_index(v); i<N; i++) {
+  else {
+    uint64_t i=first_child_index(v);
+    if (v[i]>=max_part) i++;
+    for (/**/; i<N; i++) {
       vect child = ith_child(v, i);
       if (is_canonical(child, store.get_store()))
-	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1, store);
+	cilk_spawn this->walk_tree<Res>(child, res, target_depth, depth+1, max_part, store);
     }
+  }
 }
 
 
 template<class perm>
 template<class Res>
 typename Res::type_result
-PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
+PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth, uint64_t max_part) const {
   vect zero_vect {};
   typename Res::type res {};
   BFS_storage store {};
@@ -287,7 +293,7 @@ PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
   set_number = 0;
   set_size = 0;
 #endif
-  walk_tree<Res>(zero_vect, res, depth, 0, store);
+  walk_tree<Res>(zero_vect, res, depth, 0, max_part, store);
 #ifdef SET_SIZE_STATISTIC
   std::cout << "Number of sets = "<<set_number <<
     ", Mean size = " << 1.*set_size / set_number << std::endl;
@@ -298,12 +304,22 @@ PermutationGroup<perm>::elements_of_depth_walk(uint64_t depth) const {
 
 template<class perm>
 auto PermutationGroup<perm>::elements_of_depth(uint64_t depth) const -> list {
-  return elements_of_depth_walk<ResultList>(depth);
+  return elements_of_depth_walk<ResultList>(depth, depth);
+}
+template<class perm>
+auto PermutationGroup<perm>::elements_of_depth(uint64_t depth,
+					       uint64_t max_part) const -> list {
+  return elements_of_depth_walk<ResultList>(depth, max_part);
 }
 
 template<class perm>
 uint64_t PermutationGroup<perm>::elements_of_depth_number(uint64_t depth) const {
-  return elements_of_depth_walk<ResultCounter>(depth);
+  return elements_of_depth_walk<ResultCounter>(depth, depth);
+}
+template<class perm>
+uint64_t PermutationGroup<perm>::elements_of_depth_number(uint64_t depth,
+							  uint64_t max_part) const {
+  return elements_of_depth_walk<ResultCounter>(depth, max_part);
 }
 
 #endif
