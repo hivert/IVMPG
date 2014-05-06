@@ -1,0 +1,6 @@
+- Add a author+license header to all file
+- Add test for temp_storage.hpp
+- Add test for container/bounded_set.hpp
+
+? move tests in a sudirectory
+? put all the interesting stuff in a namespace
