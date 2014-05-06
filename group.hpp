@@ -179,7 +179,7 @@ bool PermutationGroup<perm>::is_canonical(vect v, TemporaryStorage &st) const {
   return true;
 }
 
-#define SET_SIZE_STATISTIC
+// #define SET_SIZE_STATISTIC
 
 #ifdef SET_SIZE_STATISTIC
 size_t set_number = 0;
