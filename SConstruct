@@ -1,5 +1,6 @@
 import os
 import cpuAVX, cilk
+import SCons.Util
 from SCons.Errors import StopError
 from SCons.Warnings import warn, Warning, enableWarningClass
 
@@ -33,6 +34,17 @@ Help(vars.GenerateHelpText(env))
 
 ######################################################################################
 
+def ENV_update(tgt_ENV, src_ENV):
+    for K in src_ENV.keys():
+        if K in tgt_ENV.keys() and K in [ 'PATH', 'LD_LIBRARY_PATH',
+                                          'LIB', 'INCLUDE' ]:
+            tgt_ENV[K]=SCons.Util.AppendPath(tgt_ENV[K], src_ENV[K])
+        else:
+            tgt_ENV[K]=src_ENV[K]
+
+ENV_update(env['ENV'], os.environ)
+
+######################################################################################
 
 if not env.GetOption('clean') and not env.GetOption('help'):
 
