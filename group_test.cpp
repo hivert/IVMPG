@@ -9,6 +9,7 @@
 #include <boost/mpl/list.hpp>
 #endif
 #ifdef BOOST_TEST_USE_INCLUDE
+#define BOOST_TEST_NO_LIB
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>

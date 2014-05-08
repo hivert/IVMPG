@@ -7,6 +7,7 @@
 #include <boost/test/unit_test.hpp>
 #endif
 #ifdef BOOST_TEST_USE_INCLUDE
+#define BOOST_TEST_NO_LIB
 #include <boost/test/included/unit_test.hpp>
 #endif
 
