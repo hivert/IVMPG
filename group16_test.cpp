@@ -1,11 +1,22 @@
-#define BOOST_TEST_DYN_LINK
-
 #define BOOST_TEST_MODULE group
+
+#include "config.h"
+
+#ifdef BOOST_TEST_USE_LIB
+#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
+#endif
+#ifdef BOOST_TEST_USE_INCLUDE
+#include <boost/test/included/unit_test.hpp>
+#endif
+
+//____________________________________________________________________________//
 
 #include "group16.hpp"
 #include "group_examples.hpp"
 #include <iostream>
+
+//____________________________________________________________________________//
 
 struct Fixture {
 

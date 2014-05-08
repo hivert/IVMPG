@@ -1,12 +1,21 @@
-#define BOOST_TEST_DYN_LINK
-
 #define BOOST_TEST_MODULE perm_generic
 
+#include "config.h"
+
+#ifdef BOOST_TEST_USE_LIB
+#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>
+#endif
+#ifdef BOOST_TEST_USE_INCLUDE
+#include <boost/test/included/unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/mpl/list.hpp>
+#endif
 
 //____________________________________________________________________________//
+
 
 template <class VectType> struct IsPermFunctions {
   static bool is_perm(const VectType a)             {return     a.is_permutation();};
@@ -47,7 +56,6 @@ struct Fixture : public IsPermFunctions<typename PermType::vect> {
   static bool less(const VectType a, const VectType b) {return a < b;};
   static bool not_less(const VectType a, const VectType b) {return not(a < b);};
 };
-
 
 //____________________________________________________________________________//
 

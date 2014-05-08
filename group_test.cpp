@@ -1,15 +1,26 @@
-#define BOOST_TEST_DYN_LINK
-
 #define BOOST_TEST_MODULE group
 
+#include "config.h"
+
+#ifdef BOOST_TEST_USE_LIB
+#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/list.hpp>
+#endif
+#ifdef BOOST_TEST_USE_INCLUDE
+#include <boost/test/included/unit_test.hpp>
+#include <boost/test/test_case_template.hpp>
+#include <boost/mpl/list.hpp>
+#endif
+
+//____________________________________________________________________________//
 
 #include "perm16.hpp"
 #include "perm_generic.hpp"
 #include "group_examples.hpp"
-#include <iostream>
+
+//____________________________________________________________________________//
 
 template <class PermType>
 struct Fixture {
@@ -24,6 +35,8 @@ struct Fixture {
   static bool is_not_canon(const GroupType &g, VectType v) {return not g.is_canonical(v);};
 
 };
+
+//____________________________________________________________________________//
 
 typedef boost::mpl::list<
   Fixture< Perm16 >,

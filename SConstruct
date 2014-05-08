@@ -27,6 +27,8 @@ env.Append(TBB_ROOT = os.environ.get('TBB_ROOT', 'yes'))
 vars.Add(PackageVariable('tbb', 'thread building block', '${TBB_ROOT}'))
 env.Append(CILK_ROOT = os.environ.get('CILK_ROOT', 'yes'))
 vars.Add(PackageVariable('cilk', 'cilk compiler installation', '${CILK_ROOT}'))
+env.Append(BOOST_ROOT = os.environ.get('BOOST_ROOT', 'yes'))
+vars.Add(PackageVariable('boost', 'boost library installation', '${BOOST_ROOT}'))
 
 vars.Update(env)
 Help(vars.GenerateHelpText(env))
@@ -61,6 +63,10 @@ if not env.GetOption('clean') and not env.GetOption('help'):
     if conf.CheckGCCVectorExtension():
         conf.Define('GCC_VECT_CMP', 1, 'Set to 1 if GCC has vector comparison')
 
+    if isinstance(env['boost'], str):
+        env.Append(CPPPATH = [os.path.join(env['boost'], 'include')],
+                   LIBPATH = [os.path.join(env['boost'], 'lib')],
+                   RPATH   = [os.path.join(env['boost'], 'lib')])
     if conf.CheckCXXHeader('boost/container/flat_set.hpp'):
         conf.Define('USE_BOOST_FLAT_SET', 1,
                     "Set to 1 if using 'boost::container::flat_set' instead of 'std::set'")
@@ -91,10 +97,25 @@ if not env.GetOption('clean') and not env.GetOption('help'):
 test_env = env.Clone(SAGE_TESTS_OPTS=[])
 
 if not env.GetOption('clean') and not env.GetOption('help'):
-    test_conf = Configure(test_env)
-    if not test_conf.CheckLibWithHeader('boost_unit_test_framework',
-                                        'boost/test/unit_test.hpp', 'c++'):
+
+    test_conf = Configure(test_env, config_h = "config.h")
+
+    if test_conf.CheckLibWithHeader(
+            'boost_unit_test_framework', 'boost/test/unit_test.hpp', 'c++'):
+        test_conf.Define('BOOST_TEST_USE_LIB', 1,
+                       "Set to 1 if 'boost::tests' use precompiled shared libs.")
+    elif test_conf.CheckCXXHeader('boost/test/included/unit_test.hpp'):
+        test_conf.Define('BOOST_TEST_USE_INCLUDE', 1,
+                "Set to 1 if 'boost::tests' use header only.")
+        warn(ConfigureWarning, "Using header only `boost unit test` !"
+             "\n                Compiling test will be much slower.\n")
+    else:
         raise StopError("Did not find 'boost unit test', unable to perform check !")
+
+    if not (test_conf.CheckCXXHeader('boost/mpl/list.hpp') and
+            test_conf.CheckCXXHeader('boost/test/test_case_template.hpp')):
+        raise StopError("Did not find 'boost template unit test', unable to perform check !")
+
     test_env = test_conf.Finish()
 
 ######################################################################################
