@@ -41,7 +41,26 @@ long count_it(MyGroup gr, int level, size_t expected_size) {
   return res;
 }
 
-int main() {
+
+static void show_usage(string name)
+{
+  cerr << "Usage: " << name << " [-n <proc_number>] " << endl;
+  exit(1);
+}
+
+int main(int argc, char **argv) {
+
+  string nproc = "0";
+
+  if (argc != 1 and argc != 3) show_usage(argv[0]);
+  if (argc == 3) {
+    if (string(argv[1]) != "-n") show_usage(argv[0]);
+    nproc = argv[2];
+  }
+  if (nproc != "0")
+    if (__cilkrts_set_param("nworkers", nproc.c_str() ) != __CILKRTS_SET_PARAM_SUCCESS)
+      cerr << "Failed to set the number of Cilk workers" << endl;
+
   cout << "Counting: " << endl;
   count_it(g_Borie, 15,    6686 ); // Checked with Sage      10.2 s
   count_it(g_Borie, 20,   57605 ); // Checked with Sage 1min 27s
