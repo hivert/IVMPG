@@ -36,15 +36,16 @@ Help(vars.GenerateHelpText(env))
 
 ######################################################################################
 
+# to_import =  [ 'PATH', 'LD_LIBRARY_PATH', 'LIB', 'INCLUDE' ]
+to_import =  [ 'PATH' ]
 def ENV_update(tgt_ENV, src_ENV):
     for K in src_ENV.keys():
-        if K in tgt_ENV.keys() and K in [ 'PATH', 'LD_LIBRARY_PATH',
-                                          'LIB', 'INCLUDE' ]:
+        if K in tgt_ENV.keys() and K in to_import:
             tgt_ENV[K]=SCons.Util.AppendPath(tgt_ENV[K], src_ENV[K])
         else:
             tgt_ENV[K]=src_ENV[K]
 
-# ENV_update(env['ENV'], os.environ)
+ENV_update(env['ENV'], os.environ)
 
 ######################################################################################
 
