@@ -24,10 +24,10 @@ env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-ggdb', '-funroll-loops', '-DN
 
 vars = Variables()
 
-env.Append(TBB_ROOT = os.environ.get('TBB_ROOT', 'yes'))
-vars.Add(PackageVariable('tbb', 'thread building block', '${TBB_ROOT}'))
 env.Append(CILK_ROOT = os.environ.get('CILK_ROOT', 'yes'))
 vars.Add(PackageVariable('cilk', 'cilk compiler installation', '${CILK_ROOT}'))
+env.Append(TBB_ROOT = os.environ.get('TBB_ROOT', 'yes'))
+vars.Add(PackageVariable('tbb', 'thread building block', '${TBB_ROOT}'))
 env.Append(BOOST_ROOT = os.environ.get('BOOST_ROOT', 'yes'))
 vars.Add(PackageVariable('boost', 'boost library installation', '${BOOST_ROOT}'))
 
@@ -44,7 +44,7 @@ def ENV_update(tgt_ENV, src_ENV):
         else:
             tgt_ENV[K]=src_ENV[K]
 
-ENV_update(env['ENV'], os.environ)
+# ENV_update(env['ENV'], os.environ)
 
 ######################################################################################
 
