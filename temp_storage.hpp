@@ -7,6 +7,8 @@
 #include <cilk/cilk_api.h>
 #include <cilk/holder.h>
 
+namespace IVMPG {
+
 template<class T>
 class Storage_holder {
   cilk::holder< T > store;
@@ -27,7 +29,11 @@ public:
   T &get_store() { return store[__cilkrts_get_worker_number()].t; }
 };
 
+} // namespace IVMPG
+
 #else
+
+namespace IVMPG {
 
 template<class T>
 class Storage_dummy {
@@ -35,6 +41,8 @@ class Storage_dummy {
 public:
   T &get_store() { return store; }
 };
+
+} // namespace IVMPG 
 
 #endif // USE_CILK
 

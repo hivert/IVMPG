@@ -8,6 +8,7 @@
 
 using namespace std;
 using namespace std::chrono;
+using namespace IVMPG;
 
 template <class MyGroup>
 long time_it(MyGroup &gr, int level, long expected_size) {

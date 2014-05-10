@@ -4,7 +4,7 @@ from libcpp.vector cimport vector as stl_vector
 from libcpp.string cimport string as stl_string
 from libcpp.list cimport list as stl_list
 
-cdef extern from "group16.hpp" nogil:
+cdef extern from "group16.hpp" namespace "IVMPG" nogil:
     cdef cppclass Vect16:
         uint8_t &operator[](int)
         bint operator==(const Vect16 &vp) const
@@ -14,18 +14,18 @@ cdef extern from "group16.hpp" nogil:
     cdef cppclass Perm16(Vect16):
         Perm16 operator*(const Perm16 &p) const
 
-    cdef Perm16 one "Perm16::one" ()
-    cdef Perm16 elementary_transposition "Perm16::elementary_transposition" ()
+    cdef Perm16 one "IVMPG::Perm16::one" ()
+    cdef Perm16 elementary_transposition "IVMPG::Perm16::elementary_transposition" ()
 
     ctypedef stl_vector[ stl_vector[Perm16] ] StrongGeneratingSet
 
     # I have to redeclare the stl::list as I use a non standard allocator
-    cdef cppclass PG16listIterator "PermutationGroup16::list::iterator":
+    cdef cppclass PG16listIterator "IVMPG::PermutationGroup16::list::iterator":
         bint operator==(PG16listIterator) nogil
         bint operator!=(PG16listIterator) nogil
         void operator++() nogil
         Vect16 operator*() nogil
-    cdef cppclass PG16list "PermutationGroup16::list":
+    cdef cppclass PG16list "IVMPG::PermutationGroup16::list":
         int size() const
         PG16listIterator begin()
         PG16listIterator end()

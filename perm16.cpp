@@ -1,6 +1,8 @@
 #include "perm16.hpp"
 #include <iostream>
 
+namespace IVMPG {
+
 // Definition since previously *only* declared
 const constexpr size_t Vect16::Size;
 
@@ -10,3 +12,5 @@ std::ostream & operator<<(std::ostream & stream, Vect16 const &term) {
   stream << "]";
   return stream;
 }
+
+} //  namespace IVMPG

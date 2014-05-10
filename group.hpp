@@ -7,35 +7,7 @@
 #include <list>
 #include <string>
 #include "config.h"
-
-#ifdef USE_TBB
-  #include "tbb/scalable_allocator.h"
-  template<class T>
-  using allocator = tbb::scalable_allocator<T>;
-#else
-  template<class T>
-  using allocator = std::allocator<T>;
-#endif
-
-
-#if GROUP_USE_SET == 1     // UNORDERED_SET
-  #include <unordered_set>
-  template<class T>
-  using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator<T> >;
-#elif GROUP_USE_SET == 2   // BOOST_FLAT_SET
-//#ifdef USE_BOOST_FLAT_SET
-  #include <boost/container/flat_set.hpp>
-  template<class T>
-  using set = boost::container::flat_set< T, std::less<T>, allocator<T> >;
-#elif GROUP_USE_SET == 3   // STD_SET
-  #include <set>
-  template<class T>
-  using set = std::set< T, std::less<T>, allocator<T> >;
-#else                      // BOUNDED_SET
-  #include "container/bounded_set.hpp"
-  template<class T>
-  using set = bounded_set< T >;
-#endif
+#include <ostream>
 
 
 #ifdef USE_CILK
@@ -48,9 +20,52 @@
 #endif
 
 
+#ifdef USE_TBB
+  #include "tbb/scalable_allocator.h"
+namespace IVMPG {
+  template<class T>
+  using allocator = tbb::scalable_allocator<T>;
+}
+#else
+namespace IVMPG {
+  template<class T>
+  using allocator = std::allocator<T>;
+}
+#endif
+
+
+#if GROUP_USE_SET == 1     // UNORDERED_SET
+  #include <unordered_set>
+namespace IVMPG {
+  template<class T>
+  using set = std::unordered_set<T, std::hash<T>, std::equal_to<T>, allocator<T> >;
+}
+#elif GROUP_USE_SET == 2   // BOOST_FLAT_SET
+//#ifdef USE_BOOST_FLAT_SET
+  #include <boost/container/flat_set.hpp>
+namespace IVMPG {
+  template<class T>
+  using set = boost::container::flat_set< T, std::less<T>, allocator<T> >;
+}
+#elif GROUP_USE_SET == 3   // STD_SET
+  #include <set>
+namespace IVMPG {
+  template<class T>
+  using set = std::set< T, std::less<T>, allocator<T> >;
+}
+#else                      // BOUNDED_SET
+  #include "container/bounded_set.hpp"
+namespace IVMPG {
+  template<class T>
+  using set = IVMPG::Container::bounded_set< T >;
+}
+#endif
+
+
 #include "temp_storage.hpp"
 #include "perm16.hpp"
 
+namespace IVMPG {
 
 template< class perm  = Perm16 >
 class PermutationGroup {
@@ -132,7 +147,6 @@ public:
 
 };
 
-#include <ostream>
 
 template <class perm>
 std::ostream & operator<<(std::ostream & stream, const PermutationGroup<perm> &g) {
@@ -321,5 +335,7 @@ uint64_t PermutationGroup<perm>::elements_of_depth_number(uint64_t depth,
 							  uint64_t max_part) const {
   return elements_of_depth_walk<ResultCounter>(depth, max_part);
 }
+
+} //  namespace IVMPG
 
 #endif

@@ -7,6 +7,7 @@
 
 using namespace std;
 using namespace std::chrono;
+using namespace IVMPG;
 
 using MyGroup = PermutationGroup16;
 MyGroup g_Borie = GroupExamples< MyGroup >::g_Borie;

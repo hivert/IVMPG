@@ -5,8 +5,11 @@
 #include <array>
 #include <cassert>
 #include <algorithm>
+#include <ostream>
 
 #include "config.h"
+
+namespace IVMPG {
 
 template < size_t _Size, typename Expo=uint8_t >
 struct VectGeneric {
@@ -71,27 +74,7 @@ struct VectGeneric {
   }
 };
 
-// Definition since previously *only* declared
-template < size_t _Size, typename Expo >
-const constexpr size_t VectGeneric<_Size,Expo>::Size;
 
-namespace std {
-
-  template<>
-  template < size_t Size, typename Expo >
-  struct hash< VectGeneric<Size,Expo> > {
-    size_t operator () (const VectGeneric<Size,Expo> &ar) const {
-      size_t h = 0;
-      for (size_t i=0; i<VectGeneric<Size,Expo>::Size; i++)
-	h = hash<Expo>()(ar[i]) + (h << 6) + (h << 16) - h;
-      return h;
-    }
-  };
-
-}
-
-
-#include <ostream>
 template < size_t Size, typename Expo >
 std::ostream & operator<<(std::ostream & stream, const VectGeneric<Size,Expo> &term){
   stream << "[" << unsigned(term[0]);
@@ -100,6 +83,10 @@ std::ostream & operator<<(std::ostream & stream, const VectGeneric<Size,Expo> &t
   return stream;
 }
 
+
+// Definition since previously *only* declared
+template < size_t _Size, typename Expo >
+const constexpr size_t VectGeneric<_Size,Expo>::Size;
 
 template < size_t _Size, typename Expo=uint8_t >
 struct PermGeneric : public VectGeneric<_Size, Expo> {
@@ -124,5 +111,23 @@ private:
   PermGeneric(const vect v) : VectGeneric<_Size, Expo>(v) {};
 
 };
+
+} //  namespace IVMPG
+
+namespace std {
+
+  template<>
+  template < size_t Size, typename Expo >
+  struct hash< IVMPG::VectGeneric<Size,Expo> > {
+    size_t operator () (const IVMPG::VectGeneric<Size,Expo> &ar) const {
+      size_t h = 0;
+      for (size_t i=0; i<IVMPG::VectGeneric<Size,Expo>::Size; i++)
+	h = hash<Expo>()(ar[i]) + (h << 6) + (h << 16) - h;
+      return h;
+    }
+  };
+
+}
+
 
 #endif

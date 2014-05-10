@@ -3,6 +3,9 @@
 
 #include "group.hpp"
 
+
+namespace IVMPG {
+
 template< class Group = PermutationGroup<> > struct GroupExamples {
   static Group S3, g100, g_Borie;
 };
@@ -108,5 +111,7 @@ Group GroupExamples< Group >::g_Borie("N. Borie's favorite", 16,
   {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 13}},
  {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}},
  {{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}}} );
+
+} //  namespace IVMPG
 
 #endif

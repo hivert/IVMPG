@@ -4,6 +4,10 @@
 #include "perm16.hpp"
 #include "group.hpp"
 
+namespace IVMPG {
+
 using PermutationGroup16 = PermutationGroup < Perm16 >;
+
+} // namespace IVMPG
 
 #endif

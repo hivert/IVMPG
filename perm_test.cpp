@@ -64,9 +64,9 @@ struct Fixture : public IsPermFunctions<typename PermType::vect> {
 #include "perm_generic.hpp"
 
 typedef boost::mpl::list<
-  Fixture< Perm16 >,
-  Fixture< PermGeneric<16> >,
-  Fixture< PermGeneric<32> >
+  Fixture< IVMPG::Perm16 >,
+  Fixture< IVMPG::PermGeneric<16> >,
+  Fixture< IVMPG::PermGeneric<32> >
 > Fixtures;
 
 //____________________________________________________________________________//
@@ -290,9 +290,9 @@ struct PermFixture : public IsPermFunctions<_Perm> {
 //____________________________________________________________________________//
 
 typedef boost::mpl::list<
-  PermFixture< Perm16 >,
-  PermFixture< PermGeneric<16> >,
-  PermFixture< PermGeneric<32> >
+  PermFixture< IVMPG::Perm16 >,
+  PermFixture< IVMPG::PermGeneric<16> >,
+  PermFixture< IVMPG::PermGeneric<32> >
 > PermFixtures;
 
 //____________________________________________________________________________//

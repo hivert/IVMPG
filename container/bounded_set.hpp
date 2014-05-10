@@ -6,9 +6,13 @@
 #ifdef SET_STATISTIC
 #include <iostream>
 #include <iomanip>
+#include <iostream>
 #endif
 
 #include <cassert>
+
+namespace IVMPG {
+namespace Container {
 
 template <class Key, class Hash = std::hash<Key> >
 class bounded_set {
@@ -90,8 +94,6 @@ private:
 template <class Key, class Hash >
 const constexpr Hash bounded_set<Key, Hash>::hashfun;
 
-#include <iostream>
-
 template <class Key, class Hash >
 auto bounded_set<Key, Hash>::operator=(bounded_set&& rhs) & noexcept -> bounded_set & {
   assert(this != &rhs);
@@ -158,5 +160,8 @@ std::ostream & operator<<(std::ostream & stream, bounded_set<Key, Hash> const &s
   stream << "}";
   return stream;
 }
+
+} //  namespace Container
+} //  namespace IVMPG
 
 #endif // _BOUNDED_SET_HPP

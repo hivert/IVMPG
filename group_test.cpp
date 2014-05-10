@@ -26,11 +26,11 @@
 template <class PermType>
 struct Fixture {
 
-  using GroupType = PermutationGroup<PermType>;
+  using GroupType = IVMPG::PermutationGroup<PermType>;
   using VectType = typename PermType::vect;
-  const GroupType &S3 = GroupExamples<GroupType>::S3;
-  const GroupType &g100  = GroupExamples<GroupType>::g100;
-  const GroupType &g_Borie  = GroupExamples<GroupType>::g_Borie;
+  const GroupType &S3 = IVMPG::GroupExamples<GroupType>::S3;
+  const GroupType &g100  = IVMPG::GroupExamples<GroupType>::g100;
+  const GroupType &g_Borie  = IVMPG::GroupExamples<GroupType>::g_Borie;
 
   static bool is_canon(const GroupType &g, VectType v) {return g.is_canonical(v);};
   static bool is_not_canon(const GroupType &g, VectType v) {return not g.is_canonical(v);};
@@ -40,9 +40,9 @@ struct Fixture {
 //____________________________________________________________________________//
 
 typedef boost::mpl::list<
-  Fixture< Perm16 >,
-  Fixture< PermGeneric<16> >,
-  Fixture< PermGeneric<32> >
+  Fixture< IVMPG::Perm16 >,
+  Fixture< IVMPG::PermGeneric<16> >,
+  Fixture< IVMPG::PermGeneric<32> >
 > Fixtures;
 
 //____________________________________________________________________________//

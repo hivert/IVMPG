@@ -21,9 +21,9 @@
 
 struct Fixture {
 
-  PermutationGroup<> &S3 = GroupExamples<>::S3;
-  PermutationGroup<> &g100  = GroupExamples<>::g100;
-  PermutationGroup<> &g_Borie  = GroupExamples<>::g_Borie;
+  IVMPG::PermutationGroup<> &S3 = IVMPG::GroupExamples<>::S3;
+  IVMPG::PermutationGroup<> &g100  = IVMPG::GroupExamples<>::g100;
+  IVMPG::PermutationGroup<> &g_Borie  = IVMPG::GroupExamples<>::g_Borie;
 
 };
 
