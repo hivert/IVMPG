@@ -4,4 +4,3 @@
 - Add test for container/bounded_set.hpp
 
 ? move tests in a sudirectory
-? put all the interesting stuff in a namespace
