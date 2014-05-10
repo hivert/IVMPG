@@ -79,20 +79,20 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE( canonical_test, F, Fixtures, F )
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( elements_of_depth_test, F, Fixtures, F )
 {
-  BOOST_CHECK_EQUAL( F::S3.elements_of_depth( 0).size(),  1 );
-  BOOST_CHECK_EQUAL( F::S3.elements_of_depth( 5).size(),  5 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( F::S3.elements_of_depth(10).size(), 14 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( F::S3.elements_of_depth(20).size(), 44 ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::S3.elements_of_depth( 0).size(),  1u );
+  BOOST_CHECK_EQUAL( F::S3.elements_of_depth( 5).size(),  5u ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::S3.elements_of_depth(10).size(), 14u ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::S3.elements_of_depth(20).size(), 44u ); // Checked with Sage
 
-  BOOST_CHECK_EQUAL( F::g100.elements_of_depth( 0).size(),    1 );
-  BOOST_CHECK_EQUAL( F::g100.elements_of_depth( 5).size(),   26 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( F::g100.elements_of_depth(10).size(),  280 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( F::g100.elements_of_depth(20).size(), 4576 ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::g100.elements_of_depth( 0).size(),    1u );
+  BOOST_CHECK_EQUAL( F::g100.elements_of_depth( 5).size(),   26u ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::g100.elements_of_depth(10).size(),  280u ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::g100.elements_of_depth(20).size(), 4576u ); // Checked with Sage
 
-  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth( 0).size(),       1 );
-  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth( 5).size(),      25 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth(10).size(),     545 ); // Checked with Sage
-  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth(20).size(),   57605 ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth( 0).size(),       1u );
+  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth( 5).size(),      25u ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth(10).size(),     545u ); // Checked with Sage
+  BOOST_CHECK_EQUAL( F::g_Borie.elements_of_depth(20).size(),   57605u ); // Checked with Sage
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( elements_of_depth_max_part_test, F, Fixtures, F )

@@ -93,32 +93,32 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE( equal_test, F, Fixtures, F )
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( operator_bracket_const_test, F, Fixtures, F )
 {
-  BOOST_CHECK_EQUAL( F::czero[0], 0 );
-  BOOST_CHECK_EQUAL( F::czero[1], 0 );
-  BOOST_CHECK_EQUAL( F::czero[15], 0 );
-  BOOST_CHECK_EQUAL( F::cP01[0], 0 );
-  BOOST_CHECK_EQUAL( F::cP01[1], 1 );
-  BOOST_CHECK_EQUAL( F::cP01[2], 0 );
+  BOOST_CHECK_EQUAL( F::czero[0], 0u );
+  BOOST_CHECK_EQUAL( F::czero[1], 0u );
+  BOOST_CHECK_EQUAL( F::czero[15], 0u );
+  BOOST_CHECK_EQUAL( F::cP01[0], 0u );
+  BOOST_CHECK_EQUAL( F::cP01[1], 1u );
+  BOOST_CHECK_EQUAL( F::cP01[2], 0u );
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( operator_bracket_test, F, Fixtures, F )
 {
-  BOOST_CHECK_EQUAL( F::zero[0], 0 );
-  BOOST_CHECK_EQUAL( F::zero[1], 0 );
-  BOOST_CHECK_EQUAL( F::zero[15], 0 );
-  BOOST_CHECK_EQUAL( F::P01[0], 0 );
-  BOOST_CHECK_EQUAL( F::P01[1], 1 );
-  BOOST_CHECK_EQUAL( F::P01[2], 0 );
-  BOOST_CHECK_EQUAL( F::PPa[4], 0 );
-  BOOST_CHECK_EQUAL( F::PPa[5], 5 );
+  BOOST_CHECK_EQUAL( F::zero[0], 0u );
+  BOOST_CHECK_EQUAL( F::zero[1], 0u );
+  BOOST_CHECK_EQUAL( F::zero[15], 0u );
+  BOOST_CHECK_EQUAL( F::P01[0], 0u );
+  BOOST_CHECK_EQUAL( F::P01[1], 1u );
+  BOOST_CHECK_EQUAL( F::P01[2], 0u );
+  BOOST_CHECK_EQUAL( F::PPa[4], 0u );
+  BOOST_CHECK_EQUAL( F::PPa[5], 5u );
   F::zero[0] = 3;
-  BOOST_CHECK_EQUAL( F::zero[0], 3 );
-  BOOST_CHECK_EQUAL( F::zero[1], 0 );
-  BOOST_CHECK_EQUAL( F::zero[15], 0 );
+  BOOST_CHECK_EQUAL( F::zero[0], 3u );
+  BOOST_CHECK_EQUAL( F::zero[1], 0u );
+  BOOST_CHECK_EQUAL( F::zero[15], 0u );
   F::PPa[2] = 0;
-  BOOST_CHECK_EQUAL( F::PPa[1], 2 );
-  BOOST_CHECK_EQUAL( F::PPa[2], 0 );
-  BOOST_CHECK_EQUAL( F::PPa[3], 4 );
+  BOOST_CHECK_EQUAL( F::PPa[1], 2u );
+  BOOST_CHECK_EQUAL( F::PPa[2], 0u );
+  BOOST_CHECK_EQUAL( F::PPa[3], 4u );
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( operator_less_test, F, Fixtures, F )
@@ -168,48 +168,48 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE( operator_less_partial_test, F, Fixtures, F )
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( first_zero_test, F, Fixtures, F )
 {
-  BOOST_CHECK_EQUAL( F::zero.first_zero(), 0);
-  BOOST_CHECK_EQUAL( F::P01.first_zero(), 0);
-  BOOST_CHECK_EQUAL( F::PPa.first_zero(), 4);
-  BOOST_CHECK_EQUAL( F::P10.first_zero(), 1);
-  BOOST_CHECK_EQUAL( F::P1.first_zero(), 16);
+  BOOST_CHECK_EQUAL( F::zero.first_zero(), 0u);
+  BOOST_CHECK_EQUAL( F::P01.first_zero(), 0u);
+  BOOST_CHECK_EQUAL( F::PPa.first_zero(), 4u);
+  BOOST_CHECK_EQUAL( F::P10.first_zero(), 1u);
+  BOOST_CHECK_EQUAL( F::P1.first_zero(), 16u);
   BOOST_CHECK_EQUAL( F::P10.first_zero(1), F::VectType::Size);
-  BOOST_CHECK_EQUAL( F::PPa.first_zero(5), 4);
+  BOOST_CHECK_EQUAL( F::PPa.first_zero(5), 4u);
   BOOST_CHECK_EQUAL( F::PPa.first_zero(3), F::VectType::Size);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( last_zero_test, F, Fixtures, F )
 {
-  BOOST_CHECK_EQUAL( F::zero.last_zero(), 15);
-  BOOST_CHECK_EQUAL( F::P01.last_zero(), 15);
-  BOOST_CHECK_EQUAL( F::PPa.last_zero(), 4);
+  BOOST_CHECK_EQUAL( F::zero.last_zero(), 15u);
+  BOOST_CHECK_EQUAL( F::P01.last_zero(), 15u);
+  BOOST_CHECK_EQUAL( F::PPa.last_zero(), 4u);
   BOOST_CHECK_EQUAL( F::P1.last_zero(), F::VectType::Size);
-  BOOST_CHECK_EQUAL( F::P01.last_zero(1), 0);
+  BOOST_CHECK_EQUAL( F::P01.last_zero(1), 0u);
   BOOST_CHECK_EQUAL( F::P10.last_zero(1), F::VectType::Size);
-  BOOST_CHECK_EQUAL( F::PPa.last_zero(5), 4);
+  BOOST_CHECK_EQUAL( F::PPa.last_zero(5), 4u);
   BOOST_CHECK_EQUAL( F::PPa.last_zero(3), F::VectType::Size);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( first_non_zero_test, F, Fixtures, F )
 {
   BOOST_CHECK_EQUAL( F::zero.first_non_zero(), F::VectType::Size);
-  BOOST_CHECK_EQUAL( F::P01.first_non_zero(), 1);
-  BOOST_CHECK_EQUAL( F::PPa.first_non_zero(), 0);
-  BOOST_CHECK_EQUAL( F::P01.first_non_zero(), 1);
+  BOOST_CHECK_EQUAL( F::P01.first_non_zero(), 1u);
+  BOOST_CHECK_EQUAL( F::PPa.first_non_zero(), 0u);
+  BOOST_CHECK_EQUAL( F::P01.first_non_zero(), 1u);
   BOOST_CHECK_EQUAL( F::P01.first_non_zero(1), F::VectType::Size);
-  BOOST_CHECK_EQUAL( F::PPa.first_non_zero(5), 0);
-  BOOST_CHECK_EQUAL( F::PPa.first_non_zero(3), 0);
+  BOOST_CHECK_EQUAL( F::PPa.first_non_zero(5), 0u);
+  BOOST_CHECK_EQUAL( F::PPa.first_non_zero(3), 0u);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( last_non_zero_test, F, Fixtures, F )
 {
   BOOST_CHECK_EQUAL( F::zero.last_non_zero(), F::VectType::Size);
-  BOOST_CHECK_EQUAL( F::P01.last_non_zero(), 1);
-  BOOST_CHECK_EQUAL( F::PPa.last_non_zero(), 15);
-  BOOST_CHECK_EQUAL( F::P01.last_non_zero(), 1);
+  BOOST_CHECK_EQUAL( F::P01.last_non_zero(), 1u);
+  BOOST_CHECK_EQUAL( F::PPa.last_non_zero(), 15u);
+  BOOST_CHECK_EQUAL( F::P01.last_non_zero(), 1u);
   BOOST_CHECK_EQUAL( F::P01.last_non_zero(1), F::VectType::Size);
-  BOOST_CHECK_EQUAL( F::PPa.last_non_zero(5), 3);
-  BOOST_CHECK_EQUAL( F::PPa.last_non_zero(3), 2);
+  BOOST_CHECK_EQUAL( F::PPa.last_non_zero(5), 3u);
+  BOOST_CHECK_EQUAL( F::PPa.last_non_zero(3), 2u);
 }
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE( permuted_test, F, Fixtures, F )
