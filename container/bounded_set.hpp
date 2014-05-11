@@ -14,7 +14,7 @@
 namespace IVMPG {
 namespace Container {
 
-template <class Key, class Hash = std::hash<Key> >
+template <class Key, class Hash = std::hash<Key>, size_t bound = 1024>
 class bounded_set {
 
   struct Pair {
@@ -22,9 +22,8 @@ class bounded_set {
     Pair *next;
   };
 
-  size_t bound;
   static const constexpr Hash hashfun = Hash();
-  Pair *buckets; 
+  Pair *buckets;
   Pair *first;
   #ifdef SET_STATISTIC
   size_t collide = 0, success = 0, request = 0;
@@ -41,14 +40,13 @@ public:
 
   // We use an extra uninitialized pair as a sentinel for the end of the linked list.
   bounded_set(const bounded_set& s) :
-    bound(s.bound),  buckets(new Pair[bound+1]), first(s.first - s.buckets + buckets) {
+    buckets(new Pair[bound+1]), first(s.first - s.buckets + buckets) {
     for (size_t i=0; i<bound; ++i) {
       buckets[i].key = s.buckets[i].key;
       buckets[i].next = s.buckets[i].next - s.buckets + buckets;
     }
   }
-  bounded_set(size_t bound = 1024) :
-    bound(bound),
+  bounded_set() :
     buckets(new Pair[bound+1]), first(buckets+bound) {
     for (size_t i=0; i<bound; ++i) buckets[i].next = nullptr;
   }
@@ -91,13 +89,12 @@ private:
 
 };
 
-template <class Key, class Hash >
-const constexpr Hash bounded_set<Key, Hash>::hashfun;
+template <class Key, class Hash, size_t bound>
+const constexpr Hash bounded_set<Key, Hash, bound>::hashfun;
 
-template <class Key, class Hash >
-auto bounded_set<Key, Hash>::operator=(bounded_set&& rhs) & noexcept -> bounded_set & {
+template <class Key, class Hash, size_t bound>
+auto bounded_set<Key, Hash, bound>::operator=(bounded_set&& rhs) & noexcept -> bounded_set & {
   assert(this != &rhs);
-  bound   = rhs.bound;
   buckets = rhs.buckets;
   first   = rhs.first;
 #ifdef SET_STATISTIC
@@ -109,8 +106,8 @@ auto bounded_set<Key, Hash>::operator=(bounded_set&& rhs) & noexcept -> bounded_
   return *this;
 }
 
-template <class Key, class Hash >
-void bounded_set<Key, Hash>::clear() {
+template <class Key, class Hash, size_t bound>
+void bounded_set<Key, Hash, bound>::clear() {
   while (first != sentinel()) {
     Pair *tmp = first;
     first = first->next;
@@ -118,8 +115,8 @@ void bounded_set<Key, Hash>::clear() {
   }
 }
 
-template <class Key, class Hash >
-void bounded_set<Key, Hash>::insert(Key key) {
+template <class Key, class Hash, size_t bound>
+void bounded_set<Key, Hash, bound>::insert(Key key) {
 #ifdef SET_STATISTIC
   request++;
 #endif
@@ -140,16 +137,16 @@ void bounded_set<Key, Hash>::insert(Key key) {
   }
 }
 
-template <class Key, class Hash >
-size_t bounded_set<Key, Hash>::size() const {
+template <class Key, class Hash, size_t bound>
+size_t bounded_set<Key, Hash, bound>::size() const {
   Pair *it = first;
   std::size_t count = 0;
   while (it != sentinel()) {count++; it = it->next;}
   return count;
 }
 
-template <class Key, class Hash>
-std::ostream & operator<<(std::ostream & stream, bounded_set<Key, Hash> const &set) {
+template <class Key, class Hash, size_t bound>
+std::ostream & operator<<(std::ostream & stream, bounded_set<Key, Hash, bound> const &set) {
   bool first = true;
   stream << "{";
   for (auto x : set) {
