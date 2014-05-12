@@ -2,6 +2,7 @@
 #include <chrono>
 #include <cassert>
 
+#include "config.h"
 #include "group16.hpp"
 #include "group_examples.hpp"
 
@@ -43,14 +44,17 @@ long count_it(MyGroup gr, int level, size_t expected_size) {
 }
 
 
+#ifdef USE_CILK
 static void show_usage(string name)
 {
   cerr << "Usage: " << name << " [-n <proc_number>] " << endl;
   exit(1);
 }
+#endif
 
 int main(int argc, char **argv) {
 
+#ifdef USE_CILK
   string nproc = "0";
 
   if (argc != 1 and argc != 3) show_usage(argv[0]);
@@ -61,7 +65,15 @@ int main(int argc, char **argv) {
   if (nproc != "0")
     if (__cilkrts_set_param("nworkers", nproc.c_str() ) != __CILKRTS_SET_PARAM_SUCCESS)
       cerr << "Failed to set the number of Cilk workers" << endl;
+#endif
 
+  // auto res = g_Borie.elements_of_evaluation({1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1});
+  auto res = g_Borie.elements_of_evaluation({3,13});
+  cout << "Result ==================" << endl;
+  cout << res.size() << endl;
+  for (auto x: res) cout << x << endl;
+
+  /*
   cout << "Counting: " << endl;
   count_it(g_Borie, 15,    6686 ); // Checked with Sage      10.2 s
   count_it(g_Borie, 20,   57605 ); // Checked with Sage 1min 27s
@@ -73,5 +85,5 @@ int main(int argc, char **argv) {
   time_it(g_Borie, 20,   57605 ); // Checked with Sage 1min 27s
   time_it(g_Borie, 25,  375810 ); // Checked with Sage 9min 23s
   time_it(g_Borie, 30, 1983238 ); // Checked with Sage
-  
+    */
 }

@@ -109,6 +109,7 @@ public:
   vect canonical(vect v, TemporaryStorage &) const;
   list elements_of_depth(uint64_t depth) const;
   list elements_of_depth(uint64_t depth, uint64_t max_part) const;
+  list elements_of_evaluation(vect eval) const;
   uint64_t elements_of_depth_number(uint64_t depth) const;
   uint64_t elements_of_depth_number(uint64_t depth, uint64_t max_part) const;
 
@@ -120,6 +121,8 @@ public:
   //   static type_result get_value(type &res) // return value in res
   // };
   typename Res::type_result elements_of_depth_walk(uint64_t depth, uint64_t max_part) const;
+  template<typename Res>
+  typename Res::type_result elements_of_evaluation_walk(vect eval) const;
 
   uint64_t first_child_index(const vect &v) const {
     uint64_t res = v.last_non_zero(N);
@@ -145,6 +148,10 @@ public:
 		 uint64_t target_depth, uint64_t depth, uint64_t max_part,
 		 BFS_storage &store) const;
 
+  template<class Res>
+  void walk_tree_evaluation(vect v, typename Res::type &res,
+		            vect eval, uint64_t sum_eval,
+		            BFS_storage &store) const;
 };
 
 
@@ -334,6 +341,61 @@ template<class perm>
 uint64_t PermutationGroup<perm>::elements_of_depth_number(uint64_t depth,
 							  uint64_t max_part) const {
   return elements_of_depth_walk<ResultCounter>(depth, max_part);
+}
+
+template<class perm>
+template<class Res>
+void PermutationGroup<perm>::walk_tree_evaluation(vect v, typename Res::type &res,
+						  vect eval, uint64_t sum_eval,
+				                  BFS_storage &store) const {
+  // Invariant: sum = sum(eval)
+  if (sum_eval == eval[0]) { Res::update(res, v); return;}
+  uint64_t first = v.last_non_zero(N);
+  if (first >= N) first = 0;
+  else            first++;
+  // std::cout << v << " eval = " << eval << ", sum = " << sum_eval << std::endl;
+  for (uint64_t i=0; i<=eval[0]; i++) {
+    for (uint64_t ival=1; ival<N; ival++) {
+      if (eval[ival] > 0) {
+	vect child = v;
+	child[first+i] = ival;
+	vect new_eval = eval;
+	new_eval[ival]--;
+	new_eval[0] -= i;
+	if (is_canonical(child, store.get_store())) {
+	  cilk_spawn this->walk_tree_evaluation<Res>(child, res, new_eval,
+						     sum_eval-1-i, store);
+	}
+      }
+    }
+  }
+}
+
+template<class perm>
+template<class Res>
+typename Res::type_result
+PermutationGroup<perm>::elements_of_evaluation_walk(vect eval) const {
+  vect zero_vect {};
+  uint64_t sum = 0;
+  typename Res::type res {};
+  BFS_storage store {};
+#ifdef SET_SIZE_STATISTIC
+  set_number = 0;
+  set_size = 0;
+#endif
+  for (size_t i=0; i<N; i++) { sum+=eval[i]; }
+  assert(sum == N);
+  walk_tree_evaluation<Res>(zero_vect, res, eval, sum, store);
+#ifdef SET_SIZE_STATISTIC
+  std::cout << "Number of sets = "<<set_number <<
+    ", Mean size = " << 1.*set_size / set_number << std::endl;
+#endif
+  return Res::get_value(res);
+}
+
+template<class perm>
+auto PermutationGroup<perm>::elements_of_evaluation(vect eval) const -> list {
+  return elements_of_evaluation_walk<ResultList>(eval);
 }
 
 } //  namespace IVMPG

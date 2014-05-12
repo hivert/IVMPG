@@ -19,7 +19,7 @@ Type: 'scons [options] program' to build the production program,
 ######################################################################################
 
 
-env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-ggdb', '-funroll-loops', '-DNDEBUG',
+env = Environment(CXXFLAGS=['-std=c++11', '-O3', '-ggdb', '-funroll-loops', # '-DNDEBUG',
                             '-Wall', '-Wno-missing-braces', '-Wno-unused-variable'])
 
 vars = Variables()
@@ -167,8 +167,8 @@ perm_test = test_env.Program(['perm_test.cpp', perm16_o])
 group_test  = test_env.Program(['group_test.cpp', perm16_o])
 group16_test  = test_env.Program(['group16_test.cpp', perm16_o])
 
-group_time  = test_env.Program('timing.cpp')
-group_gen_time  = test_env.Program('timing_generic.cpp')
+group_time  = test_env.Program(['timing.cpp', perm16_o])
+group_gen_time  = test_env.Program(['timing_generic.cpp', perm16_o])
 
 ######################################################################################
 
