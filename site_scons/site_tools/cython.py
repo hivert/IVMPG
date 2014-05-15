@@ -1,20 +1,18 @@
-"""
-Tool to run Cython files (.pyx) into .c and .cpp.
+#*****************************************************************************
+#       Copyright (C) 2014 Florent Hivert <Florent.Hivert@univ-rouen.fr>,
+#
+#  Distributed under the terms of the GNU General Public License (GPL)
+#
+#    This code is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#    General Public License for more details.
+#
+#  The full text of the GPL is available at:
+#
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
 
-TODO:
- - Add support for dynamically selecting in-process Cython
-   through CYTHONINPROCESS variable.
-
-VARIABLES:
- - CYTHON - The path to the "cython" command line tool.
- - CYTHONFLAGS - Flags to pass to the "cython" command line tool.
- - CYTHONLANG - "c++" or "c".
-
-AUTHORS:
- - David Cournapeau
- - Dag Sverre Seljebotn
- - Florent Hivert
-"""
 import SCons
 from SCons.Builder import Builder
 from SCons.Action import Action
