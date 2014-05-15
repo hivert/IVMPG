@@ -1,4 +1,4 @@
-#include <iostream>
+ #include <iostream>
 #include <chrono>
 #include <cassert>
 
@@ -73,7 +73,6 @@ int main(int argc, char **argv) {
   cout << res.size() << endl;
   for (auto x: res) cout << x << endl;
 
-  /*
   cout << "Counting: " << endl;
   count_it(g_Borie, 15,    6686 ); // Checked with Sage      10.2 s
   count_it(g_Borie, 20,   57605 ); // Checked with Sage 1min 27s
@@ -85,5 +84,4 @@ int main(int argc, char **argv) {
   time_it(g_Borie, 20,   57605 ); // Checked with Sage 1min 27s
   time_it(g_Borie, 25,  375810 ); // Checked with Sage 9min 23s
   time_it(g_Borie, 30, 1983238 ); // Checked with Sage
-    */
 }

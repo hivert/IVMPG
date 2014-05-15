@@ -9,6 +9,7 @@
 #include <iostream>
 #endif
 
+#include <memory>
 #include <cassert>
 
 namespace IVMPG {
@@ -23,6 +24,10 @@ class bounded_set {
   };
 
   static const constexpr Hash hashfun = Hash();
+  // I'm using unique_ptr to ensure safety of deallocation an copying.
+  std::unique_ptr<Pair[]> buckets_own;
+  // This is just a copy of the previous unique_ptr which allows to gain a few
+  // percents speed using direct access.
   Pair *buckets;
   Pair *first;
   #ifdef SET_STATISTIC
@@ -30,7 +35,7 @@ class bounded_set {
   #endif
   class Iterator;
 
-  Pair * sentinel() const { return buckets+bound; }
+  Pair * sentinel() const { return &(buckets[bound]); }
 
 public:
 
@@ -39,30 +44,10 @@ public:
   typedef Iterator iterator;
 
   // We use an extra uninitialized pair as a sentinel for the end of the linked list.
-  bounded_set(const bounded_set& s) :
-    buckets(new Pair[bound+1]), first(s.first - s.buckets + buckets) {
-    for (size_t i=0; i<bound; ++i) {
-      buckets[i].key = s.buckets[i].key;
-      buckets[i].next = s.buckets[i].next - s.buckets + buckets;
-    }
-  }
   bounded_set() :
-    buckets(new Pair[bound+1]), first(buckets+bound) {
+    buckets_own(new Pair[bound+1]), buckets(buckets_own.get()),
+    first(&(buckets[bound])) {
     for (size_t i=0; i<bound; ++i) buckets[i].next = nullptr;
-  }
-
-  bounded_set(bounded_set&& rhs) noexcept { *this = std::move(rhs); };
-  bounded_set & operator=(bounded_set&& rhs) & noexcept;
-
-  ~bounded_set() {
-  #ifdef SET_STATISTIC
-    if (buckets != nullptr) {
-      std::cout << "[r" << request << std::setprecision(3) << 
-	",s" << 100.*success/request << "%"
-	",c" << 100.*collide/request << "%" << "]" << std::setprecision(6);
-    }
-  #endif
-    delete [] buckets;
   }
 
   void insert(Key key);
@@ -92,19 +77,20 @@ private:
 template <class Key, class Hash, size_t bound>
 const constexpr Hash bounded_set<Key, Hash, bound>::hashfun;
 
-template <class Key, class Hash, size_t bound>
-auto bounded_set<Key, Hash, bound>::operator=(bounded_set&& rhs) & noexcept -> bounded_set & {
-  assert(this != &rhs);
-  buckets = rhs.buckets;
-  first   = rhs.first;
-#ifdef SET_STATISTIC
-  collide = rhs.collide;
-  success = rhs.success;
-  request = rhs.request;
-#endif
-  rhs.buckets = nullptr; // to avoid double free
-  return *this;
-}
+  
+// template <class Key, class Hash, size_t bound>
+// auto bounded_set<Key, Hash, bound>::operator=(bounded_set&& rhs) & noexcept -> bounded_set & {
+//   assert(this != &rhs);
+//   buckets = std::move(rhs.buckets);
+//   first   = rhs.first;
+// #ifdef SET_STATISTIC
+//   collide = rhs.collide;
+//   success = rhs.success;
+//   request = rhs.request;
+// #endif
+//   rhs.buckets = nullptr; // to avoid double free
+//   return *this;
+// }
 
 template <class Key, class Hash, size_t bound>
 void bounded_set<Key, Hash, bound>::clear() {
@@ -133,7 +119,7 @@ void bounded_set<Key, Hash, bound>::insert(Key key) {
 #endif
     buckets[hash].key = key;
     buckets[hash].next = first;
-    first = buckets + hash;
+    first = &(buckets[hash]);
   }
 }
 

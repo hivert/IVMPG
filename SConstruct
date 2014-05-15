@@ -168,7 +168,9 @@ group_test  = test_env.Program(['group_test.cpp', perm16_o])
 group16_test  = test_env.Program(['group16_test.cpp', perm16_o])
 
 group_time  = test_env.Program(['timing.cpp', perm16_o])
+Depends(group_time, Split('container/bounded_set.hpp'))
 group_gen_time  = test_env.Program(['timing_generic.cpp', perm16_o])
+Depends(group_gen_time, Split('container/bounded_set.hpp'))
 
 ######################################################################################
 
