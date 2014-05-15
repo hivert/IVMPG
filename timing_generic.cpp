@@ -26,7 +26,7 @@ using namespace std::chrono;
 using namespace IVMPG;
 
 template <class MyGroup>
-long time_it(MyGroup &gr, int level, long expected_size) {
+long time_it(MyGroup &gr, int level, unsigned long expected_size) {
   high_resolution_clock::time_point tstart, tfin;
 
   cout << gr.name << " ( " << level << " ) : " << flush;
@@ -42,7 +42,7 @@ long time_it(MyGroup &gr, int level, long expected_size) {
 }
 
 template <class MyGroup>
-long count_it(MyGroup &gr, int level, long expected_size) {
+long count_it(MyGroup &gr, int level, unsigned long expected_size) {
   high_resolution_clock::time_point tstart, tfin;
 
   cout << gr.name << " ( " << level << " ) : " << flush;
