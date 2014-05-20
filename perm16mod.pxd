@@ -24,7 +24,8 @@ cdef class PermGroup16(SageObject):
     cdef list dom
 
     cpdef _check_sgs(self)
-    cpdef Vect16List element_of_depth(self, int depth)
+    cpdef Vect16List elements_of_depth(self, int depth)
+    cpdef Vect16List elements_of_evaluation(self, Vect16 v)
     cpdef bint is_canonical(self, Vect16 v)
     cpdef Vect16 canonical(self, Vect16 v)
 

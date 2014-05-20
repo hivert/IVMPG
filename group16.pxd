@@ -55,4 +55,5 @@ cdef extern from "group16.hpp" namespace "IVMPG" nogil:
         bint check_sgs() const
 
         PG16list elements_of_depth(uint64_t depth) const
+        PG16list elements_of_evaluation(Vect16 v) except +
 

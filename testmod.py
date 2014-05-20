@@ -20,7 +20,7 @@ G6 = PermutationGroup([[(3,5),(4,6)], [(1,2),(3,4),(5,6)], [(1,4,6),(2,3,5)]])
 G6cpp  = perm16mod.PermGroup16(G6)
 """
 sage: G6cpp._check_sgs()
-sage: l6 = G6cpp.element_of_depth(10)
+sage: l6 = G6cpp.elements_of_depth(10)
 sage: len(l6)
 280
 sage: all(len(x) == 6 for x in l6)
@@ -54,7 +54,7 @@ G = PermutationGroup([[(1,8,14,12,3,7,13,9,2,5,16,11),(4,6,15,10)],
 Gcpp  = perm16mod.PermGroup16(G)
 """
 sage: Gcpp._check_sgs()
-sage: ll = Gcpp.element_of_depth(15)
+sage: ll = Gcpp.elements_of_depth(15)
 sage: len(ll)
 6686
 sage: lsage = list(ll)
