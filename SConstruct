@@ -187,12 +187,11 @@ def sage_test(env,target,source):
     else:
         return result
 
-test_env.AlwaysBuild(Alias('check'), Alias('checkperm16mod'), Alias('checktestmod'))
+test_env.AlwaysBuild(Alias('check'), Alias('checkperm16mod'))
 checkperm16mod = test_env.Alias('checkperm16mod', ['perm16mod.pyx', perm16mod],
                           sage_test, SAGE_TESTS_OPTS=['--force-lib'])
 
-checktestmod = test_env.Alias('checktestmod', ['testmod.py', perm16mod], sage_test)
-test_env.Alias('check', [checkperm16mod, checktestmod])
+test_env.Alias('check', [checkperm16mod])
 test_env.Alias('check', [perm_test], perm_test[0].abspath)
 test_env.Alias('check', [group_test], group_test[0].abspath)
 test_env.Alias('check', [group16_test], group16_test[0].abspath)
