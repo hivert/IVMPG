@@ -34,9 +34,11 @@ message(STATUS "Building tests")
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/fallback
   ${PROJECT_BINARY_DIR})
 
-set(test_src test_bounded_set.cpp test_group16.cpp)
+set(test_src
+  test_epu.cpp test_perm16.cpp test_perm_all.cpp test_bmat8.cpp)
 foreach(f ${test_src})
   get_filename_component(testName ${f} NAME_WE)
   add_executable (${testName} ${f} test_main.cpp)
@@ -46,4 +48,7 @@ endforeach(f)
 add_executable(test_all ${test_src} test_main.cpp)
 target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
 
-add_test (TestBoundedSet test_bounded_set)
+add_test (TestEPU test_epu)
+add_test (TestPerm16 test_perm16)
+add_test (TestPermAll test_perm_all)
+add_test (TestBMat8 test_bmat8)

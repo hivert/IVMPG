@@ -2,7 +2,7 @@
 #define _GROUP16_HPP
 
 #include "group.hpp"
-#include "perm16.hpp"
+#include "hpcombi/include/perm16.hpp"
 
 namespace IVMPG {
 

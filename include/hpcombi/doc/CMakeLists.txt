@@ -10,40 +10,25 @@
 #                                                                            #
 #  The full text of the GPL is available at:                                 #
 #                                                                            #
-#                  http://www.gnu.org/licenses/                               #
+#                  http://www.gnu.org/licenses/                              #
 #****************************************************************************#
 
-find_package(Catch2 3 QUIET)
-
-if(NOT Catch2_FOUND)
-  message(STATUS "Cloning Catch2 from GIT_REPOSITORY https://github.com/catchorg/Catch2.git")
-  Include(FetchContent)
-
-  FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v3.4.0 # or a later release
-  )
-
-  FetchContent_MakeAvailable(Catch2)
+find_package(Doxygen)
+if(NOT DOXYGEN_FOUND)
+    message("Doxygen not found, I will not generate/install the documentation")
 else()
-  message(STATUS "Using system Catch2")
+   configure_file(Doxyfile.in Doxyfile)
+
+   set(DOXYGEN_INPUT ${CMAKE_BINARY_DIR}/doc/Doxyfile)
+   set(DOXYGEN_OUTPUT ${APIDOC_DIR}/html/index.html)
+
+   add_custom_target(doc ALL
+     COMMAND ${CMAKE_COMMAND} -E echo_append "Building API Documentation..."
+     COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_INPUT} > /dev/null
+     COMMAND ${CMAKE_COMMAND} -E echo "Done."
+     )
+
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/doc/html
+          DESTINATION doc/${CMAKE_PROJECT_NAME})
+
 endif()
-
-message(STATUS "Building tests")
-
-include_directories(
-  ${CMAKE_SOURCE_DIR}/include
-  ${PROJECT_BINARY_DIR})
-
-set(test_src test_bounded_set.cpp test_group16.cpp)
-foreach(f ${test_src})
-  get_filename_component(testName ${f} NAME_WE)
-  add_executable (${testName} ${f} test_main.cpp)
-  target_link_libraries(${testName} PRIVATE Catch2::Catch2WithMain)
-endforeach(f)
-
-add_executable(test_all ${test_src} test_main.cpp)
-target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
-
-add_test (TestBoundedSet test_bounded_set)

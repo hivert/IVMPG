@@ -10,7 +10,7 @@
 #                                                                            #
 #  The full text of the GPL is available at:                                 #
 #                                                                            #
-#                  http://www.gnu.org/licenses/                               #
+#                  http://www.gnu.org/licenses/                              #
 #****************************************************************************#
 
 find_package(Catch2 3 QUIET)
@@ -36,14 +36,11 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/include
   ${PROJECT_BINARY_DIR})
 
-set(test_src test_bounded_set.cpp test_group16.cpp)
-foreach(f ${test_src})
-  get_filename_component(testName ${f} NAME_WE)
-  add_executable (${testName} ${f} test_main.cpp)
-  target_link_libraries(${testName} PRIVATE Catch2::Catch2WithMain)
+set(benchmark_src
+  bench_epu8.cpp bench_perm16.cpp bench_bmat8.cpp sort.cpp inverse.cpp)
+
+foreach(f ${benchmark_src})
+  get_filename_component(benchName ${f} NAME_WE)
+  add_executable (${benchName} ${f})
+  target_link_libraries(${benchName} PRIVATE Catch2::Catch2WithMain)
 endforeach(f)
-
-add_executable(test_all ${test_src} test_main.cpp)
-target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
-
-add_test (TestBoundedSet test_bounded_set)

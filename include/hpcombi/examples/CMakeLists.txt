@@ -10,40 +10,27 @@
 #                                                                            #
 #  The full text of the GPL is available at:                                 #
 #                                                                            #
-#                  http://www.gnu.org/licenses/                               #
+#                  http://www.gnu.org/licenses/                              #
 #****************************************************************************#
 
-find_package(Catch2 3 QUIET)
-
-if(NOT Catch2_FOUND)
-  message(STATUS "Cloning Catch2 from GIT_REPOSITORY https://github.com/catchorg/Catch2.git")
-  Include(FetchContent)
-
-  FetchContent_Declare(
-    Catch2
-    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG        v3.4.0 # or a later release
-  )
-
-  FetchContent_MakeAvailable(Catch2)
-else()
-  message(STATUS "Using system Catch2")
+include (CheckIncludeFileCXX)
+check_include_file_cxx("sparsehash/dense_hash_map" HPCOMBI_HAVE_DENSEHASHMAP)
+if (NOT HPCOMBI_HAVE_DENSEHASHMAP)
+  message(STATUS "Google 'dense_hash_map' not found, using std::unordered_map")
+endif()
+check_include_file_cxx("sparsehash/dense_hash_set" HPCOMBI_HAVE_DENSEHASHSET)
+if (NOT HPCOMBI_HAVE_DENSEHASHSET)
+  message(STATUS "Google 'dense_hash_set' not found, using std::unordered_set")
 endif()
 
-message(STATUS "Building tests")
+include_directories(${CMAKE_SOURCE_DIR}/include ${PROJECT_BINARY_DIR})
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}/include
-  ${PROJECT_BINARY_DIR})
+set(usage_examples RD.cpp Renner.cpp stringmonoid.cpp Trans.cpp CF.cpp image.cpp)
 
-set(test_src test_bounded_set.cpp test_group16.cpp)
-foreach(f ${test_src})
-  get_filename_component(testName ${f} NAME_WE)
-  add_executable (${testName} ${f} test_main.cpp)
-  target_link_libraries(${testName} PRIVATE Catch2::Catch2WithMain)
+foreach(f ${usage_examples})
+  get_filename_component(exampleName ${f} NAME_WE)
+  add_executable (${exampleName} ${f})
+  # install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/${exampleName}
+  #   DESTINATION bin
+  #   RENAME ${CMAKE_PROJECT_NAME}-${exampleName})
 endforeach(f)
-
-add_executable(test_all ${test_src} test_main.cpp)
-target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
-
-add_test (TestBoundedSet test_bounded_set)

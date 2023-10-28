@@ -16,7 +16,7 @@
 #ifndef _GROUP_HPP
 #define _GROUP_HPP
 
-#include "config.h"
+// #include "config.h"
 #include <cassert>
 #include <list>
 #include <ostream>
@@ -67,17 +67,19 @@ namespace IVMPG {
   using set = std::set<T, std::less<T>, allocator<T>>;
 }
 #else  // BOUNDED_SET
-#include "container/bounded_set.hpp"
+#include "bounded_set.hpp"
 namespace IVMPG {
   template <class T>
   using set = IVMPG::Container::bounded_set<T>;
 }
 #endif
 
-#include "perm16.hpp"
+#include "hpcombi/include/perm16.hpp"
+#include "hpcombi/include/simde/x86/sse4.1.h"
 #include "temp_storage.hpp"
 
 namespace IVMPG {
+  using Perm16 = HPCombi::Perm16;
 
   template <class perm = Perm16>
   class PermutationGroup {
@@ -143,7 +145,7 @@ namespace IVMPG {
         return res;
     }
     vect ith_child(vect v, uint64_t i) const {
-      v.p[i]++;
+      v.v[i]++;
       return v;
     }
 
@@ -268,10 +270,10 @@ namespace IVMPG {
           const vect child = list_test.permuted(*it);
           // Slight change from Borie's algorithm's: we do a full lex comparison
           // first.
-          const uint64_t diff
-              = ~unsigned(_mm_movemask_epi8(_mm_cmpeq_epi8(v.v, child.v)));
-          const uint64_t lt
-              = unsigned(_mm_movemask_epi8(_mm_cmplt_epi8(v.v, child.v)));
+          const uint64_t diff = ~unsigned(
+              simde_mm_movemask_epi8(simde_mm_cmpeq_epi8(v.v, child.v)));
+          const uint64_t lt = unsigned(
+              simde_mm_movemask_epi8(simde_mm_cmplt_epi8(v.v, child.v)));
           const uint64_t first_diff = diff & (-diff);
           if (first_diff & lt)
             return false;
