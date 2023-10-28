@@ -36,14 +36,17 @@ include_directories(
   ${CMAKE_SOURCE_DIR}/include
   ${PROJECT_BINARY_DIR})
 
-set(test_src test_bounded_set.cpp test_group16.cpp)
+set(test_src 
+  test_bounded_set.cpp test_group test_group16.cpp test_temp_storage.cpp)
 foreach(f ${test_src})
   get_filename_component(testName ${f} NAME_WE)
   add_executable (${testName} ${f} test_main.cpp)
   target_link_libraries(${testName} PRIVATE Catch2::Catch2WithMain)
 endforeach(f)
 
-add_executable(test_all ${test_src} test_main.cpp)
-target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
+#add_executable(test_all ${test_src} test_main.cpp)
+#target_link_libraries(test_all PRIVATE Catch2::Catch2WithMain)
 
 add_test (TestBoundedSet test_bounded_set)
+add_test (TestGroup16 test_group16)
+add_test (TestGroup test_group)
