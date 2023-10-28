@@ -2,10 +2,10 @@ import os
 import cpuAVX, cilk
 import SCons.Util
 from SCons.Errors import StopError
-from SCons.Warnings import warn, Warning, enableWarningClass
+# from SCons.Warnings import warn, Warning, enableWarningClass
 
-class ConfigureWarning(Warning): pass
-enableWarningClass(ConfigureWarning)
+#class ConfigureWarning(Warning): pass
+#enableWarningClass(ConfigureWarning)
 
 ######################################################################################
 
@@ -182,7 +182,7 @@ def sage_test(env,target,source):
             [os.path.join(sage.env.SAGE_ROOT, 'sage'), '-t'] +
             env['SAGE_TESTS_OPTS'] +
             [source[0].abspath])
-    except Exception,e:
+    except (Exception,e):
         return "Unable to call Sage: %s"%(str(e))
     else:
         return result

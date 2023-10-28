@@ -55,7 +55,7 @@ def CheckProcInstructionSet(context, name):
     known = ('SSE3 PCLMUL LZCNT SSSE3 FMA CMPXCHG16B SSE4_1 SSE4_2 MOVBE '+
              'POPCNT AES XSAVE OSXSAVE AVX F16C RDRND').split()
     if name not in known:
-        raise ValueError, "unknown instruction set name: %s"%name
+        raise(ValueError, "unknown instruction set name: %s"%name)
     test = cpuid_header + """
       FAIL( cx & bit_%s, "This programm require %s instructions set !");
     """%(name, name) + footer

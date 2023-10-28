@@ -1,11 +1,7 @@
 *.o
-*.so
 *.os
-
 *.pyc
-
-.sconsign.dblite
-.sconf_temp
+*.so
+build/
 config.h
 config.log
-
